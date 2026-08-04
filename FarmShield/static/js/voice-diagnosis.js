@@ -167,50 +167,35 @@ class VoiceDiagnosis {
             return;
         }
 
+        // Directly request microphone access without permissions.query (which fails in many browsers)
         try {
-            console.log('🎤 Requesting microphone permission...');
-            
-            const permission = await navigator.permissions.query({ name: 'microphone' });
-            console.log('📋 Microphone permission status:', permission.state);
-            
-            if (permission.state === 'denied') {
-                this.showError('Microphone access denied. Please allow microphone permission in your browser settings.');
-                return;
-            }
+            console.log('🎤 Requesting microphone access...');
 
             let stream;
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        sampleRate: 44100
-                    } 
-                });
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 console.log('✅ Microphone access granted');
-                
+                // Immediately stop the test stream; SpeechRecognition manages its own stream
                 stream.getTracks().forEach(track => track.stop());
             } catch (mediaError) {
                 console.error('❌ Media access error:', mediaError);
                 let errorMessage = 'Cannot access microphone. ';
-                
-                if (mediaError.name === 'NotAllowedError') {
-                    errorMessage += 'Please allow microphone permission and try again.';
+
+                if (mediaError.name === 'NotAllowedError' || mediaError.name === 'PermissionDeniedError') {
+                    errorMessage += 'Please allow microphone permission in your browser and try again.';
                 } else if (mediaError.name === 'NotFoundError') {
-                    errorMessage += 'No microphone found. Please check your device.';
-                } else if (mediaError.name === 'NotSupportedError') {
-                    errorMessage += 'Your browser does not support microphone access.';
+                    errorMessage += 'No microphone found. Please connect a microphone and try again.';
                 } else {
-                    errorMessage += 'Please check your microphone settings.';
+                    errorMessage += 'Please check your microphone settings and try again.';
                 }
-                
+
                 this.showError(errorMessage);
                 return;
             }
 
             this.recognizedText = '';
             this.updateUI('listening');
-            
+
             setTimeout(() => {
                 try {
                     this.recognition.start();
@@ -218,8 +203,17 @@ class VoiceDiagnosis {
                     console.log('🎤 Speech recognition started successfully');
                 } catch (speechError) {
                     console.error('❌ Speech recognition start error:', speechError);
-                    this.showError('Failed to start speech recognition. Please try again.');
-                    this.updateUI('idle');
+                    // If already started, stop and restart
+                    if (speechError.name === 'InvalidStateError') {
+                        this.recognition.stop();
+                        setTimeout(() => {
+                            this.recognition.start();
+                            this.isRecording = true;
+                        }, 300);
+                    } else {
+                        this.showError('Failed to start speech recognition. Please try again.');
+                        this.updateUI('idle');
+                    }
                 }
             }, 100);
 
