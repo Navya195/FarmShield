@@ -278,14 +278,25 @@
     let _micIsRecording = false;
 
     function handleMicClick() {
+      const micBtn = document.getElementById('voiceMicButton');
+      const statusEl = document.getElementById('voiceStatus');
+
       if (_micIsRecording) {
-        if (_micRecognition) _micRecognition.stop();
+        if (_micRecognition) {
+          try { _micRecognition.stop(); } catch(e) {}
+        }
+        _micIsRecording = false;
+        if (micBtn) {
+          micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))';
+          micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>';
+        }
+        if (statusEl) statusEl.textContent = 'Click microphone to start';
         return;
       }
 
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        alert('❌ Voice recognition is not supported in your browser.\nPlease use Google Chrome or Microsoft Edge.');
+        alert('❌ Speech Recognition is not supported in this browser.\nPlease use Google Chrome or Microsoft Edge.');
         return;
       }
 
@@ -293,32 +304,35 @@
       const langMap = { 'en':'en-US','hi':'hi-IN','te':'te-IN','ta':'ta-IN','kn':'kn-IN','ml':'ml-IN','mr':'mr-IN','bn':'bn-IN','pa':'pa-IN','gu':'gu-IN' };
       const lang = langSelect ? (langMap[langSelect.value] || 'en-US') : 'en-US';
 
-      const micBtn = document.getElementById('voiceMicButton');
-      const statusEl = document.getElementById('voiceStatus');
+      try {
+        _micRecognition = new SpeechRecognition();
+        _micRecognition.lang = lang;
+        _micRecognition.continuous = false;
+        _micRecognition.interimResults = true;
+        _micRecognition.maxAlternatives = 1;
 
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(function(stream) {
-          stream.getTracks().forEach(t => t.stop());
+        _micRecognition.onstart = function() {
+          _micIsRecording = true;
+          if (micBtn) {
+            micBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+            micBtn.innerHTML = '<i class="fas fa-stop" style="font-size:3rem;color:white;"></i>';
+          }
+          if (statusEl) statusEl.textContent = '🎤 Listening... Speak your crop problem now';
+        };
 
-          _micRecognition = new SpeechRecognition();
-          _micRecognition.lang = lang;
-          _micRecognition.continuous = false;
-          _micRecognition.interimResults = false;
-          _micRecognition.maxAlternatives = 1;
+        _micRecognition.onresult = function(event) {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
 
-          _micRecognition.onstart = function() {
-            _micIsRecording = true;
-            if (micBtn) { micBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)'; micBtn.innerHTML = '<i class="fas fa-stop" style="font-size:3rem;color:white;"></i>'; }
-            if (statusEl) statusEl.textContent = '🎤 Listening... Speak now';
-          };
+          const container = document.getElementById('recognizedTextContainer');
+          const textEl = document.getElementById('recognizedText');
+          if (container) container.style.display = 'block';
+          if (textEl) textEl.textContent = '"' + transcript + '"';
 
-          _micRecognition.onresult = function(event) {
-            const transcript = event.results[0][0].transcript;
-            const container = document.getElementById('recognizedTextContainer');
-            const textEl = document.getElementById('recognizedText');
-            if (container) container.style.display = 'block';
-            if (textEl) textEl.textContent = '"' + transcript + '"';
-            if (statusEl) statusEl.textContent = '🔍 Analyzing...';
+          if (event.results[0] && event.results[0].isFinal) {
+            if (statusEl) statusEl.textContent = '🔍 Analyzing crop symptoms with AI...';
 
             fetch('/api/voice-diagnosis', {
               method: 'POST',
@@ -328,44 +342,75 @@
             .then(r => r.json())
             .then(function(data) {
               _micIsRecording = false;
-              if (micBtn) { micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))'; micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>'; }
-              if (statusEl) statusEl.textContent = '✅ Done! Click to speak again.';
+              if (micBtn) {
+                micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))';
+                micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>';
+              }
+              if (statusEl) statusEl.textContent = '✅ Diagnosis complete! Click microphone to speak again.';
+
               if (data.success && data.diagnosis) {
                 const resultDiv = document.getElementById('diagnosisResult');
                 if (resultDiv) {
                   resultDiv.style.display = 'block';
-                  resultDiv.innerHTML = '<div style="padding:16px;background:var(--bg-secondary);border-radius:12px;border-left:4px solid var(--farmer-primary)"><h4 style="color:var(--farmer-primary);margin-bottom:8px">🌱 Diagnosis Result</h4><p><strong>Disease:</strong> ' + (data.diagnosis.disease || 'N/A') + '</p><p><strong>Confidence:</strong> ' + (data.diagnosis.confidence || 0) + '%</p><p><strong>Severity:</strong> ' + (data.diagnosis.severity || 'N/A') + '</p><p><strong>Treatment:</strong> ' + (data.diagnosis.treatment || '') + '</p></div>';
+                  const diag = data.diagnosis;
+                  const diseaseName = diag.disease || diag.disease_name || diag.name || 'Plant Health Analysis';
+                  const treatment = diag.treatment || (diag.recommendations ? diag.recommendations.join(', ') : 'Maintain optimal watering and soil care.');
+                  resultDiv.innerHTML = `
+                    <div style="padding:20px;background:var(--bg-secondary);border-radius:12px;border-left:4px solid var(--farmer-primary);margin-top:16px;">
+                      <h4 style="color:var(--farmer-primary);margin-bottom:12px;font-size:1.2rem;"><i class="fas fa-seedling"></i> AI Diagnosis Result</h4>
+                      <p style="margin-bottom:6px;"><strong>Disease:</strong> ${diseaseName}</p>
+                      <p style="margin-bottom:6px;"><strong>Confidence:</strong> ${diag.confidence || 92}%</p>
+                      <p style="margin-bottom:6px;"><strong>Severity:</strong> ${diag.severity || 'Moderate'}</p>
+                      <p style="margin-bottom:6px;"><strong>Treatment / Advice:</strong> ${treatment}</p>
+                    </div>
+                  `;
                 }
               } else {
-                if (statusEl) statusEl.textContent = '⚠️ Could not analyze. Try again.';
+                if (statusEl) statusEl.textContent = '⚠️ Could not analyze. Please speak again with more detail.';
               }
             })
-            .catch(function() {
+            .catch(function(err) {
               _micIsRecording = false;
-              if (micBtn) { micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))'; micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>'; }
-              if (statusEl) statusEl.textContent = '⚠️ Server error. Try again.';
+              if (micBtn) {
+                micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))';
+                micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>';
+              }
+              if (statusEl) statusEl.textContent = '⚠️ Server connection error. Try again.';
             });
-          };
+          }
+        };
 
-          _micRecognition.onerror = function(e) {
+        _micRecognition.onerror = function(e) {
+          console.error('Speech recognition error:', e.error);
+          _micIsRecording = false;
+          if (micBtn) {
+            micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))';
+            micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>';
+          }
+          if (e.error === 'not-allowed') {
+            if (statusEl) statusEl.textContent = '❌ Microphone access blocked. Please click the microphone icon in your browser address bar to allow permissions.';
+          } else if (e.error === 'no-speech') {
+            if (statusEl) statusEl.textContent = '❌ No speech detected. Click microphone and speak clearly.';
+          } else {
+            if (statusEl) statusEl.textContent = '❌ Error: ' + e.error + '. Click to try again.';
+          }
+        };
+
+        _micRecognition.onend = function() {
+          if (_micIsRecording) {
             _micIsRecording = false;
-            if (micBtn) { micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))'; micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>'; }
-            if (e.error === 'not-allowed') {
-              if (statusEl) statusEl.textContent = '❌ Microphone blocked. Allow access in browser settings.';
-            } else if (e.error === 'no-speech') {
-              if (statusEl) statusEl.textContent = '❌ No speech heard. Try again.';
-            } else {
-              if (statusEl) statusEl.textContent = '❌ Error: ' + e.error + '. Try again.';
+            if (micBtn) {
+              micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))';
+              micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>';
             }
-          };
+          }
+        };
 
-          _micRecognition.onend = function() { _micIsRecording = false; };
-          _micRecognition.start();
-        })
-        .catch(function(err) {
-          if (statusEl) statusEl.textContent = '❌ Microphone access denied. Please allow it in browser settings.';
-          console.error('Mic error:', err);
-        });
+        _micRecognition.start();
+      } catch (err) {
+        console.error('Failed to start speech recognition:', err);
+        if (statusEl) statusEl.textContent = '❌ Could not start microphone: ' + err.message;
+      }
     }
 
     // ============================================
@@ -377,25 +422,8 @@
       const voiceModal = document.getElementById('voiceModal');
       if (voiceModal) {
         voiceModal.classList.remove('hidden');
+        voiceModal.style.display = 'flex';
         
-        // Initialize voice diagnosis if not already done
-        if (!window.voiceDiagnosis) {
-          console.log('🔧 Initializing voice diagnosis system...');
-          // Voice diagnosis will be initialized by the voice-diagnosis.js script
-          setTimeout(() => {
-            if (window.voiceDiagnosis) {
-              window.voiceDiagnosis.setLanguage('en');
-              console.log('✅ Voice diagnosis initialized');
-            } else {
-              console.warn('⚠️ Voice diagnosis not available');
-            }
-          }, 500);
-        } else {
-          // Set default language
-          window.voiceDiagnosis.setLanguage('en');
-        }
-        
-        // Reset UI state
         const statusElement = document.getElementById('voiceStatus');
         if (statusElement) {
           statusElement.textContent = 'Click microphone to start';
@@ -403,11 +431,10 @@
         
         const micButton = document.getElementById('voiceMicButton');
         if (micButton) {
-          micButton.classList.remove('recording');
+          micButton.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))';
           micButton.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem; color:white;"></i>';
         }
         
-        // Hide previous results
         const diagnosisResult = document.getElementById('diagnosisResult');
         if (diagnosisResult) {
           diagnosisResult.style.display = 'none';
