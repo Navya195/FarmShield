@@ -790,6 +790,7 @@ let voiceDiagnosis;
 document.addEventListener('DOMContentLoaded', () => {
     try {
         voiceDiagnosis = new VoiceDiagnosis();
+        window.voiceDiagnosis = voiceDiagnosis;
         
         if (voiceDiagnosis.recognition) {
             console.log('✅ Voice Diagnosis system ready');
@@ -820,5 +821,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-
-window.voiceDiagnosis = voiceDiagnosis;
