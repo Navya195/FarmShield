@@ -248,7 +248,7 @@
     </div>
   </div>
 
-  <input type="file" id="fileInput" accept="image/*" hidden />
+  <input type="file" id="fileInput" accept="image/*" hidden onchange="if(this.files[0]) uploadImage(this.files[0], this.files[0].name)" />
 
   <!-- Voice Diagnosis Modal -->
   <div id="voiceModal" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:2000; backdrop-filter:blur(8px); padding:20px; overflow-y:auto;">
@@ -585,7 +585,7 @@
     
     window.startVoiceAssistant = startVoiceAssistant;
 
-    // Camera Scan Functions - FIXED AND ENHANCED
+"    // Camera Scan Functions - FIXED AND ENHANCED
     let cameraStream = null;
 
     function startCameraScan() {
@@ -593,41 +593,14 @@
       const modal = document.getElementById('cameraModal');
       if (modal) {
         modal.classList.remove('hidden');
+        modal.style.display = 'flex';
         setTimeout(() => initCamera(), 100);
       }
     }
     
     window.startCameraScan = startCameraScan;
 
-    function closeCameraModal() {
-      const modal = document.getElementById('cameraModal');
-      if (modal) {
-        modal.classList.add('hidden');
-      }
-      // Stop camera stream
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        cameraStream = null;
-      }
-    }
-    
-    window.closeCameraModal = closeCameraModal;
-
-    // Close modal button handler
-    document.addEventListener('DOMContentLoaded', () => {
-      const closeCameraBtn = document.getElementById('closeCameraModal');
-      if (closeCameraBtn) {
-        closeCameraBtn.addEventListener('click', closeCameraModal);
-      }
-      
-      const closeVoiceBtn = document.getElementById('closeVoiceModal');
-      if (closeVoiceBtn) {
-        closeVoiceBtn.addEventListener('click', () => {
-          const voiceModal = document.getElementById('voiceModal');
-          if (voiceModal) voiceModal.classList.add('hidden');
-        });
-      }
-    });
+    async function initCamera() {
       const video = document.getElementById('cameraVideo');
       const errorDiv = document.getElementById('cameraError');
       
@@ -636,29 +609,24 @@
         return;
       }
 
-      // Clear any previous errors
       errorDiv.classList.add('hidden');
       video.style.display = 'block';
       
       try {
-        // Check if browser supports camera
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           throw new Error('Camera not supported in this browser');
         }
 
         console.log('📷 Requesting camera access...');
-        
-        // Request camera with better settings
         const constraints = {
           video: {
-            facingMode: 'environment', // Use back camera on mobile
+            facingMode: 'environment',
             width: { ideal: 1280 },
             height: { ideal: 720 }
           }
         };
 
         cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-        
         video.srcObject = cameraStream;
         video.onloadedmetadata = () => {
           video.play();
@@ -704,22 +672,15 @@
 
       try {
         console.log('📸 Capturing photo...');
-        
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        
-        // Set canvas size to match video
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        
-        // Draw the video frame to canvas
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Convert to blob and upload
         canvas.toBlob(blob => {
           if (blob) {
             const filename = `camera-capture-${Date.now()}.jpg`;
-            console.log('📤 Uploading captured photo:', filename);
             uploadImage(blob, filename);
           }
         }, 'image/jpeg', 0.9);
@@ -731,14 +692,8 @@
     }
 
     async function uploadImage(file, filename) {
-      if (!file) {
-        console.error('❌ No file provided for upload');
-        return;
-      }
+      if (!file) return;
 
-      console.log('📤 Starting upload:', filename, 'Size:', (file.size / 1024).toFixed(1) + ' KB');
-      
-      // Show loading state
       showLoadingNotification('🔍 Analyzing image...');
       
       try {
@@ -751,12 +706,10 @@
         });
         
         if (!response.ok) {
-          throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+          throw new Error(`Upload failed: ${response.status}`);
         }
         
         const data = await response.json();
-        console.log('✅ Upload successful:', data);
-        
         displayPredictionResult(data);
         closeCameraModal();
         
@@ -769,12 +722,9 @@
     function displayPredictionResult(data) {
       const resultBox = document.getElementById('resultBox');
       const resultContent = document.getElementById('resultContent');
-      const placeholder = resultBox.querySelector('.result-placeholder');
+      const placeholder = resultBox ? resultBox.querySelector('.result-placeholder') : null;
       
-      if (!resultBox || !resultContent) {
-        console.error('❌ Result elements not found');
-        return;
-      }
+      if (!resultBox || !resultContent) return;
 
       if (data.success && data.disease) {
         const disease = data.disease;
@@ -823,16 +773,14 @@
           </div>
         `;
         
-        placeholder.classList.add('hidden');
+        if (placeholder) placeholder.classList.add('hidden');
         resultContent.classList.remove('hidden');
         
-        // Scroll to result
         setTimeout(() => {
           resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }, 100);
         
         showSuccessNotification('✅ Disease analysis complete!');
-        
       } else {
         showErrorNotification(data.error || 'Analysis failed. Please try again.');
       }
@@ -843,29 +791,17 @@
       if (modal) {
         modal.classList.add('hidden');
       }
-      
-      // Stop camera stream
       if (cameraStream) {
-        cameraStream.getTracks().forEach(track => {
-          track.stop();
-          console.log('📷 Camera stream stopped');
-        });
+        cameraStream.getTracks().forEach(track => track.stop());
         cameraStream = null;
       }
-      
-      // Clear video element
       const video = document.getElementById('cameraVideo');
       if (video) {
         video.srcObject = null;
       }
     }
 
-    // ============================================
-    // NOTIFICATION SYSTEM - ENHANCED
-    // ============================================
-
     function showNotification(message, type = 'info') {
-      // Remove existing notifications
       document.querySelectorAll('.farmshield-notification').forEach(n => n.remove());
       
       const notification = document.createElement('div');
@@ -887,7 +823,7 @@
       
       notification.style.cssText = `
         position: fixed;
-        top: 80px;
+        top: 20px;
         right: 20px;
         background: linear-gradient(135deg, ${colors[type].bg}, ${colors[type].border});
         color: white;
@@ -905,36 +841,6 @@
       `;
       
       notification.innerHTML = `
-        <i class="${icons[type]}"></i>
-        <span>${message}</span>
-      `;
-      
-      document.body.appendChild(notification);
-      
-      // Auto remove after 3 seconds
-      setTimeout(() => {
-        if (notification.parentNode) {
-          notification.style.animation = 'slideOutRight 0.3s ease';
-          setTimeout(() => notification.remove(), 300);
-        }
-      }, 3000);
-    }
-
-    // Enhanced notification functions
-    function showSuccessNotification(message) {
-      showNotification(message, 'success');
-    }
-
-    function showErrorNotification(message) {
-      showNotification(message, 'error');
-    }
-
-    function showLoadingNotification(message) {
-      showNotification(message, 'loading');
-    }Poppins', sans-serif;
-      `;
-      
-      notification.innerHTML = `
         <i class="${icons[type]}" style="font-size: 1.2rem;"></i>
         <span>${message}</span>
         ${type !== 'loading' ? `
@@ -949,14 +855,24 @@
       if (type !== 'loading') {
         setTimeout(() => {
           if (notification.parentElement) {
-            notification.style.animation = 'slideOutRight 0.5s ease';
-            setTimeout(() => notification.remove(), 500);
+            notification.remove();
           }
         }, type === 'error' ? 7000 : 4000);
       }
     }
 
-    // Theme Toggle
+    function showSuccessNotification(message) {
+      showNotification(message, 'success');
+    }
+
+    function showErrorNotification(message) {
+      showNotification(message, 'error');
+    }
+
+    function showLoadingNotification(message) {
+      showNotification(message, 'loading');
+    }
+
     function toggleTheme() {
       const html = document.documentElement;
       const currentTheme = html.getAttribute('data-theme');
@@ -965,189 +881,70 @@
       localStorage.setItem('theme', newTheme);
     }
 
-    // ============================================
-    // FARMER MODE TOGGLE - FIXED
-    // ============================================
-    
     function toggleFarmerMode() {
-      console.log('Farmer mode toggle clicked'); // Debug log
       const html = document.documentElement;
       const currentMode = html.getAttribute('data-mode') || 'normal';
       const newMode = currentMode === 'farmer' ? 'normal' : 'farmer';
-      
       html.setAttribute('data-mode', newMode);
       localStorage.setItem('farmerMode', newMode);
-      
-      // Visual feedback
-      const button = document.getElementById('farmerModeToggle');
-      if (button) {
-        if (newMode === 'farmer') {
-          button.style.background = '#22c55e';
-          button.innerHTML = '<i class="fas fa-tractor"></i>';
-          console.log('Switched to farmer mode');
-        } else {
-          button.style.background = '#4ade80';
-          button.innerHTML = '<i class="fas fa-tractor"></i>';
-          console.log('Switched to normal mode');
-        }
-      }
-      
-      // Show notification
       showNotification(`Switched to ${newMode === 'farmer' ? 'Farmer' : 'Normal'} mode`, 'success');
     }
 
-    // Make toggleFarmerMode available globally
-    window.toggleFarmerMode = toggleFarmerMode;
-
-    // Support Functions
     function callKVK() {
       alert('📞 KVK Helpline: 1234-567890\n\nPlease note: This is a demo number.');
     }
 
     function callAgricultureDept() {
-      alert('📞 Agriculture Department: 1800-180-1551\n\nIvR Service available 24/7');
+      alert('📞 Agriculture Department: 1800-180-1551\n\nIVR Service available 24/7');
     }
 
     function callExpertHelpline() {
       alert('📞 Expert Helpline: 1800-270-0000\n\nConnect with agricultural experts');
     }
 
-    // Make functions available globally  
+    window.toggleFarmerMode = toggleFarmerMode;
     window.startCameraScan = startCameraScan;
     window.capturePhoto = capturePhoto;
+    window.uploadImage = uploadImage;
     window.callKVK = callKVK;
     window.callAgricultureDept = callAgricultureDept;
     window.callExpertHelpline = callExpertHelpline;
 
-    // Initialize on page load - ENHANCED
     document.addEventListener('DOMContentLoaded', () => {
-      console.log('Page loaded, initializing buttons...');
+      console.log('Home page DOM loaded, initializing listeners...');
       
-      // Theme toggle
       const themeToggle = document.getElementById('themeToggle');
-      if (themeToggle) {
-        themeToggle.addEventListener('click', toggleTheme);
-        console.log('Theme toggle initialized');
-      }
+      if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
 
-      // Farmer mode toggle - FIXED
       const farmerToggle = document.getElementById('farmerModeToggle');
-      if (farmerToggle) {
-        farmerToggle.addEventListener('click', toggleFarmerMode);
-        console.log('Farmer mode toggle initialized');
-        
-        // Set initial mode from localStorage
-        const savedMode = localStorage.getItem('farmerMode') || 'normal';
-        document.documentElement.setAttribute('data-mode', savedMode);
-        
-        // Update button appearance based on current mode
-        if (savedMode === 'farmer') {
-          farmerToggle.style.background = '#22c55e';
-        } else {
-          farmerToggle.style.background = '#4ade80';
-        }
-      } else {
-        console.error('Farmer mode toggle button not found!');
-      }
+      if (farmerToggle) farmerToggle.addEventListener('click', toggleFarmerMode);
 
-      // Simple test - ensure logout is available
-      console.log('✅ Logout system ready:', typeof window.performLogout === 'function');
-        console.error('❌ Logout function not available!');
-      }
-
-      // Camera modal close button
       const closeCameraBtn = document.getElementById('closeCameraModal');
-      if (closeCameraBtn) {
-        closeCameraBtn.addEventListener('click', closeCameraModal);
-        console.log('Camera modal close button initialized');
-      }
+      if (closeCameraBtn) closeCameraBtn.addEventListener('click', closeCameraModal);
 
-      // Camera capture button
       const captureBtn = document.getElementById('cameraCaptureBtn');
-      if (captureBtn) {
-        captureBtn.addEventListener('click', capturePhoto);
-      }
+      if (captureBtn) captureBtn.addEventListener('click', capturePhoto);
 
-      // Gallery upload button
       const uploadBtn = document.getElementById('cameraUploadBtn');
       const fileInput = document.getElementById('fileInput');
       if (uploadBtn && fileInput) {
         uploadBtn.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => {
-          if (e.target.files[0]) {
-            uploadImage(e.target.files[0], e.target.files[0].name);
-          }
-        });
       }
 
-      // Close Voice Modal
       const closeVoiceModal = document.getElementById('closeVoiceModal');
       if (closeVoiceModal) {
         closeVoiceModal.addEventListener('click', () => {
           const voiceModal = document.getElementById('voiceModal');
           if (voiceModal) {
             voiceModal.classList.add('hidden');
-            // Stop recording if active
             if (_micIsRecording && _micRecognition) {
-              _micRecognition.stop();
+              try { _micRecognition.stop(); } catch(e) {}
               _micIsRecording = false;
             }
           }
         });
       }
 
-      // Microphone button click is handled by onclick="handleMicClick()" on the button itself
-
-      // Check for OAuth success messages
-      const urlParams = new URLSearchParams(window.location.search);
-      const oauthSuccess = urlParams.get('oauth_success');
-      
-      if (oauthSuccess === 'google') {
-        showSuccessNotification('✅ Successfully logged in with Google! Welcome to FarmShield.');
-      } else if (oauthSuccess === 'microsoft') {
-        showSuccessNotification('✅ Successfully logged in with Microsoft! Welcome to FarmShield.');
-      }
-    });
-
-    function showSuccessNotification(message) {
-      const notification = document.createElement('div');
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: linear-gradient(135deg, #22c55e, #16a34a);
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
-        z-index: 10000;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        animation: slideInRight 0.5s ease;
-        max-width: 400px;
-      `;
-      
-      notification.innerHTML = `
-        <i class="fas fa-check-circle" style="font-size: 1.2rem;"></i>
-        <span>${message}</span>
-        <button onclick="this.parentElement.remove()" style="background: none; border: none; color: white; cursor: pointer; margin-left: 10px; font-size: 1.2rem;">
-          <i class="fas fa-times"></i>
-        </button>
-      `;
-      
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        if (notification.parentElement) {
-          notification.remove();
-        }
-      }, 5000);
-    }
-
-    // Restore theme preference
-    document.addEventListener('DOMContentLoaded', () => {
       const savedTheme = localStorage.getItem('theme') || 'dark';
       const savedMode = localStorage.getItem('farmerMode') || 'normal';
       document.documentElement.setAttribute('data-theme', savedTheme);
