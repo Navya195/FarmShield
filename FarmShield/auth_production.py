@@ -16,7 +16,6 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 import msal
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,6 @@ class ProductionAuthSystem:
         self.init_database()
         self.register_routes(app)
         
-        # Configure session
         app.config['SESSION_COOKIE_SECURE'] = not app.debug
         app.config['SESSION_COOKIE_HTTPONLY'] = True
         app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -233,14 +231,12 @@ class ProductionAuthSystem:
             if not self.google_client_id:
                 raise ValueError("Google Client ID not configured")
             
-            # Verify the token
             idinfo = id_token.verify_oauth2_token(
                 id_token_string,
                 google_requests.Request(),
                 self.google_client_id
             )
             
-            # Verify the issuer
             if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
                 raise ValueError('Wrong issuer')
             
@@ -260,14 +256,12 @@ class ProductionAuthSystem:
             if not self.microsoft_client_id:
                 raise ValueError("Microsoft Client ID not configured")
             
-            # Create MSAL app
             app = msal.ConfidentialClientApplication(
                 self.microsoft_client_id,
                 authority=self.microsoft_authority,
                 client_credential=self.microsoft_client_secret
             )
             
-            # Get user info from Microsoft Graph API
             import requests
             headers = {'Authorization': f'Bearer {access_token}'}
             response = requests.get('https://graph.microsoft.com/v1.0/me', headers=headers)
@@ -312,7 +306,6 @@ class ProductionAuthSystem:
                 if not id_token_string:
                     return jsonify({'error': 'ID token required'}), 400
                 
-                # Verify token
                 user_info = self.verify_google_token(id_token_string)
                 if not user_info:
                     return jsonify({'error': 'Invalid Google token'}), 401
@@ -322,24 +315,19 @@ class ProductionAuthSystem:
                 picture = user_info['picture']
                 google_id = user_info['sub']
                 
-                # Check if user exists
                 user = self.get_user_by_email(email)
                 
                 if user:
-                    # Update OAuth info if not already linked
                     if not user['google_id']:
                         self.update_user_oauth(user['id'], google_id=google_id, profile_picture=picture)
                     user_id = user['id']
                 else:
-                    # Create new user
                     user_id = self.create_user(email, name, google_id=google_id, profile_picture=picture)
                     if not user_id:
                         return jsonify({'error': 'Failed to create user'}), 500
                 
-                # Update last login
                 self.update_last_login(user_id)
                 
-                # Create session
                 user = self.get_user_by_id(user_id)
                 session['user'] = {
                     'id': user['id'],
@@ -369,8 +357,6 @@ class ProductionAuthSystem:
                 if not id_token_string:
                     return jsonify({'error': 'ID token required'}), 400
                 
-                # For Firebase Microsoft auth, we can use the ID token directly
-                # The token is already verified by Firebase on the client side
                 email = data.get('email')
                 name = data.get('name')
                 picture = data.get('photoURL')
@@ -379,24 +365,19 @@ class ProductionAuthSystem:
                 if not email or not microsoft_id:
                     return jsonify({'error': 'Invalid Microsoft token data'}), 401
                 
-                # Check if user exists
                 user = self.get_user_by_email(email)
                 
                 if user:
-                    # Update OAuth info if not already linked
                     if not user['microsoft_id']:
                         self.update_user_oauth(user['id'], microsoft_id=microsoft_id, profile_picture=picture)
                     user_id = user['id']
                 else:
-                    # Create new user
                     user_id = self.create_user(email, name, microsoft_id=microsoft_id, profile_picture=picture)
                     if not user_id:
                         return jsonify({'error': 'Failed to create user'}), 500
                 
-                # Update last login
                 self.update_last_login(user_id)
                 
-                # Create session
                 user = self.get_user_by_id(user_id)
                 session['user'] = {
                     'id': user['id'],
@@ -427,7 +408,6 @@ class ProductionAuthSystem:
             return f(*args, **kwargs)
         return decorated_function
 
-# Create global instance
 production_auth = None
 
 def create_production_auth(app):

@@ -88,7 +88,6 @@ def main():
     if not os.path.exists("app.py"):
         print("❌ Please run this script from the FarmShield directory")
         return
-    # install_requirements()
     create_directories()
     download_nltk_data()
     port = 5000

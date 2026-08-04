@@ -17,14 +17,12 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix
 import seaborn as sns
 
-# Configuration
 IMG_SIZE = (224, 224)
 BATCH_SIZE = 32
 EPOCHS = 50
 LEARNING_RATE = 0.0001
 NUM_CLASSES = 38  # PlantVillage dataset classes
 
-# Disease classes mapping
 DISEASE_CLASSES = [
     'Apple___Apple_scab',
     'Apple___Black_rot',
@@ -69,17 +67,14 @@ DISEASE_CLASSES = [
 def create_model():
     """Create CNN model using MobileNetV2 transfer learning"""
     
-    # Load pre-trained MobileNetV2
     base_model = MobileNetV2(
         weights='imagenet',
         include_top=False,
         input_shape=(*IMG_SIZE, 3)
     )
     
-    # Freeze base model layers
     base_model.trainable = False
     
-    # Add custom classification head
     inputs = tf.keras.Input(shape=(*IMG_SIZE, 3))
     x = base_model(inputs, training=False)
     x = GlobalAveragePooling2D()(x)
@@ -95,7 +90,6 @@ def create_model():
 def prepare_data_generators(data_dir):
     """Prepare data generators with augmentation"""
     
-    # Data augmentation for training
     train_datagen = ImageDataGenerator(
         rescale=1./255,
         rotation_range=20,
@@ -108,13 +102,11 @@ def prepare_data_generators(data_dir):
         validation_split=0.2
     )
     
-    # Only rescaling for validation
     val_datagen = ImageDataGenerator(
         rescale=1./255,
         validation_split=0.2
     )
     
-    # Create generators
     train_generator = train_datagen.flow_from_directory(
         data_dir,
         target_size=IMG_SIZE,
@@ -141,29 +133,24 @@ def train_model():
     print("🌱 FarmShield - Training CNN Model for Crop Disease Detection")
     print("=" * 60)
     
-    # Check for dataset
     data_dir = "../datasets/PlantVillage"
     if not os.path.exists(data_dir):
         print("❌ Dataset not found. Please download PlantVillage dataset.")
         print("   Download from: https://www.kaggle.com/datasets/abdallahalidev/plantvillage-dataset")
         return
     
-    # Create model
     print("🔧 Creating MobileNetV2 model...")
     model = create_model()
     
-    # Compile model
     model.compile(
         optimizer=Adam(learning_rate=LEARNING_RATE),
         loss='categorical_crossentropy',
         metrics=['accuracy', 'top_3_accuracy']
     )
     
-    # Model summary
     print("\n📊 Model Architecture:")
     model.summary()
     
-    # Prepare data
     print("\n📁 Preparing data generators...")
     train_gen, val_gen = prepare_data_generators(data_dir)
     
@@ -171,7 +158,6 @@ def train_model():
     print(f"   Validation samples: {val_gen.samples}")
     print(f"   Number of classes: {train_gen.num_classes}")
     
-    # Callbacks
     callbacks = [
         ModelCheckpoint(
             'farmshield_model_best.h5',
@@ -194,7 +180,6 @@ def train_model():
         )
     ]
     
-    # Train model
     print("\n🚀 Starting training...")
     history = model.fit(
         train_gen,
@@ -204,28 +189,22 @@ def train_model():
         verbose=1
     )
     
-    # Fine-tuning phase
     print("\n🔧 Fine-tuning model...")
     
-    # Unfreeze top layers of base model
     base_model = model.layers[1]
     base_model.trainable = True
     
-    # Fine-tune from this layer onwards
     fine_tune_at = 100
     
-    # Freeze all layers before fine_tune_at
     for layer in base_model.layers[:fine_tune_at]:
         layer.trainable = False
     
-    # Recompile with lower learning rate
     model.compile(
         optimizer=Adam(learning_rate=LEARNING_RATE/10),
         loss='categorical_crossentropy',
         metrics=['accuracy', 'top_3_accuracy']
     )
     
-    # Continue training
     fine_tune_epochs = 20
     total_epochs = EPOCHS + fine_tune_epochs
     
@@ -238,14 +217,11 @@ def train_model():
         verbose=1
     )
     
-    # Save final model
     model.save('farmshield_model_final.h5')
     print("\n✅ Model saved as 'farmshield_model_final.h5'")
     
-    # Plot training history
     plot_training_history(history, history_fine)
     
-    # Evaluate model
     evaluate_model(model, val_gen)
     
     return model
@@ -266,7 +242,6 @@ def plot_training_history(history, history_fine=None):
     
     plt.figure(figsize=(12, 4))
     
-    # Accuracy plot
     plt.subplot(1, 2, 1)
     plt.plot(acc, label='Training Accuracy')
     plt.plot(val_acc, label='Validation Accuracy')
@@ -275,7 +250,6 @@ def plot_training_history(history, history_fine=None):
     plt.ylabel('Accuracy')
     plt.legend()
     
-    # Loss plot
     plt.subplot(1, 2, 2)
     plt.plot(loss, label='Training Loss')
     plt.plot(val_loss, label='Validation Loss')
@@ -293,18 +267,15 @@ def evaluate_model(model, val_gen):
     
     print("\n📈 Evaluating model performance...")
     
-    # Get predictions
     val_gen.reset()
     predictions = model.predict(val_gen, verbose=1)
     predicted_classes = np.argmax(predictions, axis=1)
     true_classes = val_gen.classes
     class_labels = list(val_gen.class_indices.keys())
     
-    # Classification report
     print("\n📊 Classification Report:")
     print(classification_report(true_classes, predicted_classes, target_names=class_labels))
     
-    # Confusion matrix
     cm = confusion_matrix(true_classes, predicted_classes)
     
     plt.figure(figsize=(15, 12))
@@ -319,7 +290,6 @@ def evaluate_model(model, val_gen):
     plt.savefig('confusion_matrix.png', dpi=300, bbox_inches='tight')
     plt.show()
     
-    # Calculate accuracy
     accuracy = np.sum(predicted_classes == true_classes) / len(true_classes)
     print(f"\n🎯 Final Accuracy: {accuracy:.4f} ({accuracy*100:.2f}%)")
 
@@ -328,7 +298,6 @@ def create_lightweight_model():
     
     print("\n📱 Creating lightweight model for offline use...")
     
-    # Smaller model for mobile/offline deployment
     base_model = MobileNetV2(
         weights='imagenet',
         include_top=False,
@@ -347,12 +316,10 @@ def create_lightweight_model():
     
     lightweight_model = Model(inputs, outputs)
     
-    # Convert to TensorFlow Lite
     converter = tf.lite.TFLiteConverter.from_keras_model(lightweight_model)
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     tflite_model = converter.convert()
     
-    # Save TFLite model
     with open('farmshield_model_lite.tflite', 'wb') as f:
         f.write(tflite_model)
     
@@ -361,7 +328,6 @@ def create_lightweight_model():
     return lightweight_model
 
 if __name__ == "__main__":
-    # Set GPU memory growth
     gpus = tf.config.experimental.list_physical_devices('GPU')
     if gpus:
         try:
@@ -370,10 +336,8 @@ if __name__ == "__main__":
         except RuntimeError as e:
             print(e)
     
-    # Train the model
     model = train_model()
     
-    # Create lightweight version
     create_lightweight_model()
     
     print("\n🎉 Training completed successfully!")

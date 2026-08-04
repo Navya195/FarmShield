@@ -19,13 +19,11 @@ class GradCAM:
     def make_gradcam_heatmap(self, img_array, pred_index=None):
         """Generate Grad-CAM heatmap"""
         try:
-            # Create a model that maps the input image to the activations
             grad_model = Model(
                 inputs=self.model.inputs,
                 outputs=[self.model.get_layer(self.last_conv_layer_name).output, self.model.output]
             )
             
-            # Compute the gradient of the top predicted class
             with tf.GradientTape() as tape:
                 last_conv_layer_output, preds = grad_model(img_array)
                 if pred_index is None:
@@ -35,15 +33,12 @@ class GradCAM:
             # Gradient of the output neuron with regard to the output feature map
             grads = tape.gradient(class_channel, last_conv_layer_output)
             
-            # Mean intensity of the gradient over a specific feature map channel
             pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
             
-            # Multiply each channel in the feature map array by importance
             last_conv_layer_output = last_conv_layer_output[0]
             heatmap = last_conv_layer_output @ pooled_grads[..., tf.newaxis]
             heatmap = tf.squeeze(heatmap)
             
-            # Normalize the heatmap
             heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
             return heatmap.numpy()
             
@@ -55,25 +50,20 @@ class GradCAM:
     def create_superimposed_visualization(self, img_path, heatmap, alpha=0.4):
         """Create superimposed visualization of original image and heatmap"""
         try:
-            # Load original image
             img = cv2.imread(img_path)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             img = cv2.resize(img, (224, 224))
             
-            # Rescale heatmap to range 0-255
             heatmap = np.uint8(255 * heatmap)
             
-            # Use jet colormap to colorize heatmap
             jet = cm.get_cmap("jet")
             jet_colors = jet(np.arange(256))[:, :3]
             jet_heatmap = jet_colors[heatmap]
             
-            # Create an image with RGB colorized heatmap
             jet_heatmap = tf.keras.preprocessing.image.array_to_img(jet_heatmap)
             jet_heatmap = jet_heatmap.resize((224, 224))
             jet_heatmap = tf.keras.preprocessing.image.img_to_array(jet_heatmap)
             
-            # Superimpose the heatmap on original image
             superimposed_img = jet_heatmap * alpha + img
             superimposed_img = tf.keras.preprocessing.image.array_to_img(superimposed_img)
             
@@ -86,16 +76,12 @@ class GradCAM:
 def generate_explanation(model, img_path, img_array, class_names):
     """Generate complete explanation with Grad-CAM"""
     try:
-        # Initialize Grad-CAM
         gradcam = GradCAM(model)
         
-        # Generate heatmap
         heatmap = gradcam.make_gradcam_heatmap(img_array)
         
-        # Create visualization
         visualization = gradcam.create_superimposed_visualization(img_path, heatmap)
         
-        # Get prediction
         preds = model.predict(img_array)
         pred_class = np.argmax(preds[0])
         confidence = float(preds[0][pred_class])

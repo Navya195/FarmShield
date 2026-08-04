@@ -9,7 +9,6 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Tuple, Optional
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='[%(levelname)s] %(name)s: %(message)s'
@@ -292,7 +291,6 @@ class VoiceDiagnosisEngine:
             logger.info(f"   Language: {language}")
             logger.info("="*70)
             
-            # Extract entities
             crop = self._extract_crop(text)
             symptoms = self._extract_symptoms(text)
             severity = self._determine_severity(text)
@@ -302,7 +300,6 @@ class VoiceDiagnosisEngine:
             logger.info(f"   Symptoms: {symptoms}")
             logger.info(f"   Severity: {severity}")
             
-            # Predict disease
             disease_predictions = self._predict_disease(crop, symptoms)
             
             logger.info(f"🔬 DISEASE PREDICTIONS: {len(disease_predictions)} found")
@@ -311,13 +308,11 @@ class VoiceDiagnosisEngine:
                 logger.warning("⚠️ No disease predictions - returning guidance response")
                 return self._no_disease_found_response(crop, symptoms, text)
             
-            # Get top prediction
             top_disease = disease_predictions[0]
             disease_info = self.diseases_db[top_disease["disease_key"]]
             
             logger.info(f"✅ TOP PREDICTION: {disease_info['name']} ({top_disease['confidence']}%)")
             
-            # Generate comprehensive diagnosis
             diagnosis = {
                 "success": True,
                 "timestamp": datetime.now().isoformat(),
@@ -362,21 +357,18 @@ class VoiceDiagnosisEngine:
         
         logger.info(f"🔍 Extracting crop from text: '{text}'")
         
-        # First try exact word boundary matches
         for crop, keywords in self.crop_keywords.items():
             for keyword in keywords:
                 if re.search(rf'\b{re.escape(keyword)}\b', text_lower, re.IGNORECASE):
                     logger.info(f"✅ Detected crop (word boundary): {crop} (keyword: {keyword})")
                     return crop.capitalize()
         
-        # Second pass: substring matches (for Telugu/Indic text)
         for crop, keywords in self.crop_keywords.items():
             for keyword in keywords:
                 if keyword in text_lower:
                     logger.info(f"✅ Detected crop (partial match): {crop} (keyword: {keyword})")
                     return crop.capitalize()
         
-        # Check if text contains Telugu/Tamil/Hindi characters
         if any('\u0C00' <= char <= '\u0C7F' for char in text):
             logger.info("📝 Telugu text detected - defaulting to Rice")
             return "Rice"
@@ -387,7 +379,6 @@ class VoiceDiagnosisEngine:
             logger.info("📝 Tamil text detected - defaulting to Rice")
             return "Rice"
         
-        # Generic keywords that imply a crop exists even if unnamed
         generic_crop_hints = ["crop", "plant", "field", "farm", "leaf", "leaves", "tree", "seed", "harvest", "yield", "పంట", "పొలం", "మొక్క"]
         for hint in generic_crop_hints:
             if hint in text_lower:
@@ -423,17 +414,14 @@ class VoiceDiagnosisEngine:
         """Determine disease severity from text"""
         text_lower = text.lower()
         
-        # Check for severe indicators first
         for keyword in self.severity_keywords["severe"]:
             if keyword in text_lower:
                 return "severe"
         
-        # Check for moderate indicators
         for keyword in self.severity_keywords["moderate"]:
             if keyword in text_lower:
                 return "moderate"
         
-        # Check for mild indicators
         for keyword in self.severity_keywords["mild"]:
             if keyword in text_lower:
                 return "mild"
@@ -447,15 +435,12 @@ class VoiceDiagnosisEngine:
         logger.info(f"🔬 Predicting disease for Crop: '{crop}', Symptoms: {symptoms}")
         
         for disease_key, disease_info in self.diseases_db.items():
-            # Check crop match more flexibly
             crop_match = False
             
             if crop == "Unknown crop":
-                # If crop is unknown, check all diseases
                 crop_match = True
                 logger.info(f"   Checking {disease_key} (crop unknown, checking all)")
             else:
-                # Flexible crop matching
                 crop_match = (
                     crop.lower() in disease_info["crop"].lower() or 
                     disease_info["crop"].lower() in crop.lower() or
@@ -468,35 +453,26 @@ class VoiceDiagnosisEngine:
                     logger.debug(f"   Skipping {disease_key} - crop mismatch")
                     continue
             
-            # Calculate confidence based on symptom matching
             disease_symptoms = [s.lower() for s in disease_info["symptoms"]]
             matches = 0
             matched_symptoms = []
             
-            # More intelligent symptom matching
             for symptom in symptoms:
                 for disease_symptom in disease_symptoms:
-                    # Check if symptom word is in disease symptom
                     if symptom.lower() in disease_symptom or disease_symptom in symptom.lower():
                         matches += 1
                         matched_symptoms.append(symptom)
                         logger.info(f"      ✅ Symptom match: {symptom} ↔ {disease_symptom}")
                         break
             
-            # Calculate confidence score
             if matches > 0 or (crop != "Unknown crop" and len(symptoms) == 0):
-                # Base confidence on symptom matches
                 if matches > 0 and symptoms:
-                    # Confidence based on match ratio
                     confidence = min(95, (matches / max(len(symptoms), 1)) * 100)
-                    # Boost confidence if multiple symptoms match
                     if matches >= len(symptoms):
                         confidence = min(95, confidence * 1.2)
-                    # Reduce confidence if crop is unknown
                     if crop == "Unknown crop":
                         confidence = confidence * 0.8
                 elif crop != "Unknown crop" and len(symptoms) == 0:
-                    # Known crop but no symptoms - moderate confidence
                     confidence = 60
                 else:
                     confidence = 50  # Default
@@ -511,7 +487,6 @@ class VoiceDiagnosisEngine:
                     "matched_symptom_list": matched_symptoms
                 })
         
-        # Sort by confidence
         predictions.sort(key=lambda x: x["confidence"], reverse=True)
         
         # If no predictions found but we have symptoms, return top diseases
@@ -552,7 +527,6 @@ class VoiceDiagnosisEngine:
         
         logger.info(f"🤔 Generating guidance response for: crop='{crop}', symptoms={symptoms}")
         
-        # Provide better guidance based on available info
         if crop != "Unknown crop":
             disease_name = f"General {crop} Health Assessment"
             message = f"I can see you mentioned {crop}, but I need more specific symptoms to provide an accurate diagnosis."
@@ -604,10 +578,8 @@ class VoiceDiagnosisEngine:
         
         treatment = disease_info["treatment"]
         
-        # Immediate action
         recommendations.append(f"🚨 Immediate: {treatment['immediate']}")
         
-        # Severity-based treatment
         if severity == "mild":
             recommendations.append(f"🌿 Try organic: {treatment['organic'][0]}")
         elif severity == "moderate":
@@ -616,7 +588,6 @@ class VoiceDiagnosisEngine:
             recommendations.append(f"💊 Chemical treatment required: {treatment['chemical'][0]}")
             recommendations.append(f"⚠️ Consider removing severely infected plants")
         
-        # Prevention
         recommendations.append(f"🛡️ Prevention: {treatment['prevention'][0]}")
         
         return recommendations
@@ -643,7 +614,6 @@ class VoiceDiagnosisEngine:
         
         return steps
 
-# Global engine instance
 voice_engine = None
 
 def get_voice_engine():

@@ -15,7 +15,6 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
@@ -23,14 +22,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Load environment variables
 load_dotenv()
 
-# Import authentication system
 from auth_system import create_auth_system, require_auth
 print("[FarmShield] Authentication System loaded")
 
-# Import voice diagnosis engine
 try:
     from voice_diagnosis_engine import get_voice_engine
     VOICE_ENGINE_AVAILABLE = True
@@ -63,17 +59,14 @@ app.config["REPORT_FOLDER"] = os.path.join(os.path.dirname(__file__), "reports")
 app.config["MODEL_PATH"] = os.path.join(os.path.dirname(__file__), "model", "farmshield_model.h5")
 app.config["NLP_DATA_PATH"] = os.path.join(os.path.dirname(__file__), "nlp", "knowledge_base.json")
 
-# Security configurations for sessions
 app.config["SESSION_COOKIE_SECURE"] = os.getenv("FLASK_ENV") == "production"
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["PERMANENT_SESSION_LIFETIME"] = 3600  # 1 hour
 
-# Initialize authentication system
 auth_system = create_auth_system(app)
 print("✅ Authentication System initialized")
 
-# ---------- Authentication is now handled by auth_system.py ----------
 USERS_FILE = os.path.join(os.path.dirname(__file__), "users.json")
 
 def load_users():
@@ -119,18 +112,14 @@ def init_default_users():
         save_users(default_users)
 
 def hash_password(pw):
-    # Simple base64 “hash” for demo; replace with proper bcrypt/argon2 in production
     return base64.b64encode(pw.encode()).decode()
 
-# DEPRECATED: Use @require_auth from auth_system instead
-# This old decorator is replaced by the auth_system.require_auth decorator
 
 app.config["MAX_CONTENT_LENGTH"] = 15 * 1024 * 1024
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "bmp"}
 
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 os.makedirs(app.config["REPORT_FOLDER"], exist_ok=True)
-# Configure CORS with proper origin restrictions
 CORS(app, resources={
     r"/api/*": {
         "origins": ["http://localhost:5000", "http://localhost:5173", "http://127.0.0.1:5000", "http://127.0.0.1:5173"],
@@ -447,10 +436,8 @@ def dashboard():
 def api_logout():
     """Simple logout endpoint - GET request, clears session and redirects"""
     try:
-        # Clear all session data
         session.clear()
         logger.info("✅ User logged out (GET endpoint)")
-        # Redirect to login
         return redirect(url_for('login'))
     except Exception as e:
         logger.error(f"Logout error: {e}")
@@ -460,7 +447,6 @@ def api_logout():
 def logout():
     """Unified logout endpoint - Clears all session data"""
     try:
-        # Clear all session data
         session.pop("user", None)
         session.pop("oauth_state", None)
         session.pop("oauth_provider", None)
@@ -468,7 +454,6 @@ def logout():
         session.pop("auth_method", None)
         session.pop("authenticated_at", None)
         
-        # Clear entire session
         session.clear()
         
         logger.info("✅ User logged out successfully - All session data cleared")
@@ -485,7 +470,6 @@ def logout_test():
     """Debug page for testing logout"""
     return render_template("logout_test.html")
 
-# ---------- Updated Auth API Endpoints using new auth_system ----------
 
 @app.route("/api/auth/signup", methods=["POST"])
 def api_signup():
@@ -497,21 +481,17 @@ def api_signup():
     if not email or not password or not name:
         return jsonify({"error": "All fields are required"}), 400
     
-    # Validate email format
     if not auth_system.security.validate_email(email):
         return jsonify({"error": "Invalid email format"}), 400
     
-    # Validate password strength
     valid, message = auth_system.security.validate_password_strength(password)
     if not valid:
         return jsonify({"error": message}), 400
     
-    # Check if user already exists
     if auth_system.get_user_by_email(email):
         return jsonify({"error": "User already exists"}), 409
     
     try:
-        # Create user in database
         password_hash = auth_system.security.hash_password(password)
         conn = auth_system.db.get_connection()
         try:
@@ -542,7 +522,6 @@ def api_login():
     if not email or not password:
         return jsonify({"error": "Email and password required"}), 400
     
-    # Get user from database directly (bypassing auth_system for now)
     try:
         conn = sqlite3.connect('farmshield.db')
         conn.row_factory = sqlite3.Row
@@ -557,18 +536,15 @@ def api_login():
         
         print(f"User found: {user['email']}")  # Debug log
         
-        # Check if account is locked
         if user['account_locked']:
             return jsonify({"error": "Account is locked. Please contact support."}), 401
         
-        # Verify password using bcrypt directly
         if not bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
             print(f"Password verification failed for: {email}")  # Debug log
             return jsonify({"error": "Invalid email or password"}), 401
         
         print(f"Login successful for: {email}")  # Debug log
         
-        # Successful login
         session["user"] = {
             "id": user['id'],
             "email": user['email'], 
@@ -586,9 +562,7 @@ def api_login():
         print(f"Login error: {e}")  # Debug log
         return jsonify({"error": "Authentication system error"}), 500
 
-# Logout endpoint - consolidated, see /logout route above for implementation
 
-# Session check endpoint
 @app.route("/api/auth/session", methods=["GET"])
 def api_session():
     user = session.get("user")
@@ -613,7 +587,6 @@ def predict():
     file.save(filepath)
     
     try:
-        # Analyze image using simple image analysis (improved version)
         disease_key, confidence = analyze_image_for_disease(filepath)
         disease_info = DISEASE_DB.get(disease_key, DISEASE_DB["Tomato___Early_blight"])
         
@@ -673,38 +646,29 @@ def analyze_image_for_disease(filepath: str) -> Tuple[str, float]:
         from PIL import Image
         import numpy as np
         
-        # Open image
         img = Image.open(filepath).convert('RGB')
         img_array = np.array(img)
         
-        # Analyze image characteristics
         height, width = img_array.shape[:2]
         
-        # Check for dominant colors in HSV space
         try:
             import cv2
             hsv = cv2.cvtColor(img_array, cv2.COLOR_RGB2HSV)
             
-            # Color range analysis
-            # Green (healthy plant)
             green_mask = cv2.inRange(hsv, np.array([35, 25, 25]), np.array([90, 255, 255]))
             green_ratio = np.sum(green_mask) / (height * width * 255)
             
-            # Yellow (nutrient deficiency, early blight)
             yellow_mask = cv2.inRange(hsv, np.array([15, 25, 25]), np.array([35, 255, 255]))
             yellow_ratio = np.sum(yellow_mask) / (height * width * 255)
             
-            # Brown/Dark (late blight, fungus)
             brown_mask = cv2.inRange(hsv, np.array([10, 30, 30]), np.array([25, 255, 255]))
             brown_ratio = np.sum(brown_mask) / (height * width * 255)
             
-            # White (powdery mildew, fungus)
             white_mask = cv2.inRange(hsv, np.array([0, 0, 150]), np.array([180, 50, 255]))
             white_ratio = np.sum(white_mask) / (height * width * 255)
             
             logger.info(f"Color analysis - Green: {green_ratio:.2%}, Yellow: {yellow_ratio:.2%}, Brown: {brown_ratio:.2%}, White: {white_ratio:.2%}")
             
-            # Decision logic based on color ratios
             if white_ratio > 0.15:  # White spots/powder
                 return "Tomato___Late_blight", min(95, 70 + white_ratio * 100)
             elif brown_ratio > 0.2:  # Brown discoloration
@@ -717,11 +681,8 @@ def analyze_image_for_disease(filepath: str) -> Tuple[str, float]:
                 return "Tomato___Early_blight", 65
         except ImportError:
             logger.warning("OpenCV not available, using basic analysis")
-            # Fallback analysis without cv2
             pass
         
-        # Basic fallback analysis
-        # Check average color brightness
         avg_brightness = np.mean(img_array)
         
         if avg_brightness > 180:  # Very bright (possibly white fungus)
@@ -741,7 +702,6 @@ def analyze_image_for_disease(filepath: str) -> Tuple[str, float]:
 def chat():
     data = request.get_json(silent=True) or {}
     if not data:
-        # Fallback: try form data
         query = request.form.get('query', '').strip()
     else:
         query = data.get('query', '').strip()
@@ -873,13 +833,11 @@ def voice_diagnosis():
         logger.info(f"[Voice Diagnosis] Processing: '{text[:50]}...' (Language: {language})")
         
         if VOICE_ENGINE_AVAILABLE:
-            # Use voice diagnosis engine
             engine = get_voice_engine()
             result = engine.analyze_speech(text, language)
             logger.info(f"[Voice Diagnosis] Success: {result.get('diagnosis', {}).get('disease_name', 'Unknown')}")
             return jsonify(result)
         else:
-            # Fallback basic analysis
             logger.warning("[Voice Diagnosis] Engine not available, using fallback")
             return jsonify({
                 'success': True,
@@ -943,7 +901,6 @@ def init_default_users():
         try:
             cursor = conn.cursor()
             
-            # Check if users already exist
             cursor.execute('SELECT COUNT(*) FROM users')
             count = cursor.fetchone()[0]
             
@@ -988,10 +945,8 @@ def init_default_users():
         print(f"❌ Error creating default users: {e}")
 
 if __name__ == "__main__":
-    # Initialize default users
     init_default_users()
     
-    # Get port from environment variable for deployment compatibility
     port = int(os.environ.get('PORT', 5000))
     debug_mode = os.environ.get('FLASK_ENV') != 'production'
     

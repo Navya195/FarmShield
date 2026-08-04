@@ -25,7 +25,6 @@ class VoiceDiagnosis {
             return false;
         }
 
-        // Check browser support
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         
         if (!SpeechRecognition) {
@@ -37,7 +36,6 @@ class VoiceDiagnosis {
             return false;
         }
 
-        // Check for microphone API support
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             console.error('❌ Microphone API not supported');
             this.showDetailedError(
@@ -54,7 +52,6 @@ class VoiceDiagnosis {
             this.recognition.maxAlternatives = 1;
             this.recognition.lang = this.currentLanguage;
 
-            // Event handlers
             this.recognition.onstart = () => this.onRecognitionStart();
             this.recognition.onresult = (event) => this.onRecognitionResult(event);
             this.recognition.onerror = (event) => this.onRecognitionError(event);
@@ -102,7 +99,6 @@ class VoiceDiagnosis {
                 console.log(`🌍 Language changed to: ${this.currentLanguage}`);
             }
             
-            // Show language change confirmation
             const langNames = {
                 'en-US': 'English',
                 'hi-IN': 'हिंदी (Hindi)',
@@ -124,7 +120,6 @@ class VoiceDiagnosis {
         }
     }
 
-    // Add method to check browser compatibility
     checkBrowserCompatibility() {
         const checks = {
             speechRecognition: !!(window.SpeechRecognition || window.webkitSpeechRecognition),
@@ -137,7 +132,6 @@ class VoiceDiagnosis {
         return checks;
     }
 
-    // Add method to show compatibility status
     showCompatibilityStatus() {
         const checks = this.checkBrowserCompatibility();
         const issues = [];
@@ -174,10 +168,8 @@ class VoiceDiagnosis {
         }
 
         try {
-            // First request microphone permission explicitly
             console.log('🎤 Requesting microphone permission...');
             
-            // Check if already granted
             const permission = await navigator.permissions.query({ name: 'microphone' });
             console.log('📋 Microphone permission status:', permission.state);
             
@@ -186,7 +178,6 @@ class VoiceDiagnosis {
                 return;
             }
 
-            // Try to get media stream first to ensure mic access
             let stream;
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ 
@@ -198,7 +189,6 @@ class VoiceDiagnosis {
                 });
                 console.log('✅ Microphone access granted');
                 
-                // Close the stream immediately as we only need permission
                 stream.getTracks().forEach(track => track.stop());
             } catch (mediaError) {
                 console.error('❌ Media access error:', mediaError);
@@ -218,11 +208,9 @@ class VoiceDiagnosis {
                 return;
             }
 
-            // Now start speech recognition
             this.recognizedText = '';
             this.updateUI('listening');
             
-            // Add a small delay to ensure UI updates
             setTimeout(() => {
                 try {
                     this.recognition.start();
@@ -268,7 +256,6 @@ class VoiceDiagnosis {
             }
         }
 
-        // Update recognized text display
         if (finalTranscript) {
             this.recognizedText = finalTranscript;
             this.displayRecognizedText(finalTranscript);
@@ -319,11 +306,9 @@ class VoiceDiagnosis {
                 actionTip = 'Please refresh the page and try again.';
         }
 
-        // Show detailed error with tip
         this.showDetailedError(errorMessage, actionTip);
         this.updateUI('idle');
         
-        // Auto-retry for network errors
         if (event.error === 'network' && !this.hasRetried) {
             console.log('🔄 Auto-retrying after network error...');
             this.hasRetried = true;
@@ -340,7 +325,6 @@ class VoiceDiagnosis {
 
         if (this.recognizedText) {
             console.log('🚀 Auto-analyzing recognized text:', this.recognizedText);
-            // Automatically analyze the recognized text
             this.analyzeSpeech(this.recognizedText);
         } else {
             this.updateUI('idle');
@@ -385,7 +369,6 @@ class VoiceDiagnosis {
             const result = await response.json();
             console.log('✅ [VOICE] Analysis result:', result);
             
-            // Validate response structure
             if (!result.success) {
                 throw new Error(result.error || 'Analysis failed');
             }
@@ -400,7 +383,6 @@ class VoiceDiagnosis {
         } catch (error) {
             console.error('❌ [VOICE] Analysis error:', error);
             
-            // Retry once if it failed
             if (!this.hasRetried) {
                 console.log('🔄 [VOICE] Retrying analysis...');
                 this.hasRetried = true;
@@ -429,7 +411,6 @@ class VoiceDiagnosis {
         const container = document.getElementById('diagnosisResult');
         if (!container) return;
 
-        // Add to history
         this.diagnosisHistory.push({
             timestamp: new Date(),
             result: result
@@ -439,7 +420,6 @@ class VoiceDiagnosis {
         const confidence = diagnosis.confidence || 0;
         const severity = diagnosis.severity || 'unknown';
 
-        // Severity colors
         const severityColors = {
             'mild': '#22c55e',
             'moderate': '#f59e0b',
@@ -544,7 +524,6 @@ class VoiceDiagnosis {
 
         container.style.display = 'block';
         
-        // Scroll to result smoothly
         setTimeout(() => {
             container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }, 100);
@@ -682,7 +661,6 @@ class VoiceDiagnosis {
     }
 
     showError(message) {
-        // Create error notification
         const notification = document.createElement('div');
         notification.className = 'voice-error-notification';
         notification.innerHTML = `
@@ -716,7 +694,6 @@ class VoiceDiagnosis {
     }
 
     showDetailedError(message, tip) {
-        // Create detailed error notification
         const notification = document.createElement('div');
         notification.className = 'voice-error-notification detailed';
         notification.innerHTML = `
@@ -808,7 +785,6 @@ class VoiceDiagnosis {
     }
 }
 
-// Initialize global instance with better error handling
 let voiceDiagnosis;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -818,7 +794,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (voiceDiagnosis.recognition) {
             console.log('✅ Voice Diagnosis system ready');
             
-            // Add compatibility status to UI if there's a status element
             const statusElement = document.getElementById('voiceCompatibilityStatus');
             if (statusElement) {
                 const compatible = voiceDiagnosis.showCompatibilityStatus();
@@ -830,7 +805,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
         console.error('❌ Failed to initialize Voice Diagnosis:', error);
         
-        // Create fallback notification
         const fallbackDiv = document.createElement('div');
         fallbackDiv.innerHTML = `
             <div style="background: #fee2e2; border: 1px solid #fecaca; color: #dc2626; padding: 12px; border-radius: 8px; margin: 16px; font-size: 14px;">
@@ -847,5 +821,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Export for use in HTML
 window.voiceDiagnosis = voiceDiagnosis;

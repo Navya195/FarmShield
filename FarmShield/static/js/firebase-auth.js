@@ -1,23 +1,17 @@
-// Firebase Authentication Configuration and Implementation
-// This handles Google and Microsoft OAuth with Firebase
 
-// Firebase configuration will be initialized from environment
 let firebaseConfig = null;
 let auth = null;
 let googleProvider = null;
 let microsoftProvider = null;
 let isFirebaseReady = false;
 
-// Initialize Firebase Authentication
 async function initializeFirebaseAuth() {
     try {
-        // Check if Firebase SDK is loaded
         if (typeof firebase === 'undefined') {
             console.warn('⚠️ Firebase SDK not loaded');
             return false;
         }
         
-        // Fetch Firebase config from backend
         const response = await fetch('/api/auth/firebase-config');
         if (!response.ok) {
             console.warn('⚠️ Firebase config not available from backend');
@@ -26,21 +20,17 @@ async function initializeFirebaseAuth() {
         
         firebaseConfig = await response.json();
         
-        // Check if config has required fields
         if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
             console.warn('⚠️ Firebase not configured (missing apiKey or projectId)');
             return false;
         }
         
-        // Initialize Firebase
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         
-        // Initialize Auth
         auth = firebase.auth();
         
-        // Configure providers
         googleProvider = new firebase.auth.GoogleAuthProvider();
         googleProvider.addScope('email');
         googleProvider.addScope('profile');
@@ -66,7 +56,6 @@ async function initializeFirebaseAuth() {
     }
 }
 
-// Google Sign-In with Popup
 async function signInWithGoogle() {
     try {
         if (!isFirebaseReady || !auth || !googleProvider) {
@@ -75,14 +64,11 @@ async function signInWithGoogle() {
         
         showAuthLoading('google', 'Opening Google Sign-In...');
         
-        // Sign in with popup
         const result = await auth.signInWithPopup(googleProvider);
         const user = result.user;
         
-        // Get ID token
         const idToken = await user.getIdToken();
         
-        // Send to backend for verification and session creation
         const response = await fetch('/api/auth/google/verify', {
             method: 'POST',
             headers: {
@@ -115,7 +101,6 @@ async function signInWithGoogle() {
     } catch (error) {
         hideAuthLoading();
         
-        // Re-throw if it's our custom error
         if (error.message && error.message.includes('Firebase not initialized')) {
             throw error;
         }
@@ -124,7 +109,6 @@ async function signInWithGoogle() {
     }
 }
 
-// Microsoft Sign-In with Popup
 async function signInWithMicrosoft() {
     try {
         if (!isFirebaseReady || !auth || !microsoftProvider) {
@@ -133,14 +117,11 @@ async function signInWithMicrosoft() {
         
         showAuthLoading('microsoft', 'Opening Microsoft Sign-In...');
         
-        // Sign in with popup
         const result = await auth.signInWithPopup(microsoftProvider);
         const user = result.user;
         
-        // Get ID token
         const idToken = await user.getIdToken();
         
-        // Send to backend for verification and session creation
         const response = await fetch('/api/auth/microsoft/verify', {
             method: 'POST',
             headers: {
@@ -173,7 +154,6 @@ async function signInWithMicrosoft() {
     } catch (error) {
         hideAuthLoading();
         
-        // Re-throw if it's our custom error
         if (error.message && error.message.includes('Firebase not initialized')) {
             throw error;
         }
@@ -182,7 +162,6 @@ async function signInWithMicrosoft() {
     }
 }
 
-// Show loading state during authentication
 function showAuthLoading(provider, message) {
     const btn = document.getElementById(`${provider}Login`);
     if (btn) {
@@ -191,7 +170,6 @@ function showAuthLoading(provider, message) {
     }
 }
 
-// Hide loading state
 function hideAuthLoading() {
     const googleBtn = document.getElementById('googleLogin');
     const microsoftBtn = document.getElementById('microsoftLogin');
@@ -207,7 +185,6 @@ function hideAuthLoading() {
     }
 }
 
-// Handle authentication errors
 function handleAuthError(provider, error) {
     console.error(`${provider} auth error:`, error);
     
@@ -228,7 +205,6 @@ function handleAuthError(provider, error) {
     showErrorMessage(message);
 }
 
-// Show success notification
 function showSuccessMessage(message) {
     const notification = document.createElement('div');
     notification.className = 'auth-notification success';
@@ -260,7 +236,6 @@ function showSuccessMessage(message) {
     }, 5000);
 }
 
-// Show error notification
 function showErrorMessage(message) {
     const notification = document.createElement('div');
     notification.className = 'auth-notification error';
@@ -296,7 +271,6 @@ function showErrorMessage(message) {
     }, 7000);
 }
 
-// Add slide animation CSS
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideInRight {
@@ -312,7 +286,6 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Export functions for use in HTML
 window.signInWithGoogle = signInWithGoogle;
 window.signInWithMicrosoft = signInWithMicrosoft;
 window.initializeFirebaseAuth = initializeFirebaseAuth;

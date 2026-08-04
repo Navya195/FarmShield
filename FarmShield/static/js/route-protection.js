@@ -1,10 +1,7 @@
-// Route Protection - Frontend Security Layer
-// Prevents unauthorized access to protected pages
 
 (function() {
     'use strict';
     
-    // List of protected routes (pages that require authentication)
     const protectedRoutes = [
         '/',
         '/dashboard',
@@ -23,33 +20,27 @@
         '/settings'
     ];
     
-    // List of public routes (pages that don't require authentication)
     const publicRoutes = [
         '/login',
         '/signup',
         '/auth/forgot-password'
     ];
     
-    // Check if current route is protected
     function isProtectedRoute() {
         const currentPath = window.location.pathname;
         
-        // Check if exactly matches protected route
         if (protectedRoutes.includes(currentPath)) {
             return true;
         }
         
-        // Check if starts with protected route
         return protectedRoutes.some(route => currentPath.startsWith(route + '/'));
     }
     
-    // Check if current route is public
     function isPublicRoute() {
         const currentPath = window.location.pathname;
         return publicRoutes.some(route => currentPath.startsWith(route));
     }
     
-    // Check authentication status
     async function checkAuthentication() {
         try {
             const response = await fetch('/api/auth/session', {
@@ -73,14 +64,12 @@
         }
     }
     
-    // Redirect to login
     function redirectToLogin(reason = 'unauthenticated') {
         const currentPath = window.location.pathname;
         const returnUrl = encodeURIComponent(currentPath + window.location.search);
         
         console.log(`🔒 Access denied: ${reason}. Redirecting to login...`);
         
-        // Show loading indicator
         document.body.innerHTML = `
             <div style="
                 position: fixed;
@@ -122,21 +111,17 @@
             </style>
         `;
         
-        // Redirect after short delay
         setTimeout(() => {
             window.location.href = `/login?return=${returnUrl}&reason=${reason}`;
         }, 800);
     }
     
-    // Main protection logic
     async function protectRoute() {
-        // Skip if on public route
         if (isPublicRoute()) {
             console.log('✅ Public route - no authentication required');
             return;
         }
         
-        // Check if route needs protection
         if (!isProtectedRoute()) {
             console.log('ℹ️ Unprotected route');
             return;
@@ -144,7 +129,6 @@
         
         console.log('🔒 Protected route detected - verifying authentication...');
         
-        // Check authentication
         const isAuthenticated = await checkAuthentication();
         
         if (!isAuthenticated) {
@@ -154,14 +138,12 @@
         }
     }
     
-    // Run protection check on page load
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', protectRoute);
     } else {
         protectRoute();
     }
     
-    // Re-check authentication periodically (every 5 minutes)
     setInterval(async () => {
         if (isProtectedRoute() && !isPublicRoute()) {
             const isAuthenticated = await checkAuthentication();
@@ -171,15 +153,12 @@
         }
     }, 5 * 60 * 1000); // 5 minutes
     
-    // Handle browser back/forward
     window.addEventListener('pageshow', function(event) {
         if (event.persisted) {
-            // Page loaded from cache
             protectRoute();
         }
     });
     
-    // Prevent unauthorized access via direct URL manipulation
     window.addEventListener('popstate', protectRoute);
     
     console.log('🛡️ Route protection initialized');

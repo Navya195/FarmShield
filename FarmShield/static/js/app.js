@@ -11,13 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initExperts();
   initCommunity();
 
-  // Hook up voiceBtn navbar microphone
   const voiceBtn = document.getElementById('voiceBtn');
   if (voiceBtn) {
     voiceBtn.addEventListener('click', startVoiceAssistant);
   }
 
-  // Hook up camera modal controls
   const closeCamBtn = document.getElementById('closeCameraModal');
   if (closeCamBtn) {
     closeCamBtn.addEventListener('click', closeCameraModal);
@@ -369,11 +367,9 @@ function startVoiceAssistant() {
   const voiceModal = document.getElementById('voiceModal');
   if (voiceModal) {
     voiceModal.classList.remove('hidden');
-    // Initialize voice diagnosis if not already done
     if (!window.voiceDiagnosis) {
       window.voiceDiagnosis = new VoiceDiagnosis();
     }
-    // Set language to English by default
     if (window.voiceDiagnosis) {
       window.voiceDiagnosis.setLanguage('en');
       const langSelect = document.getElementById('voiceLanguageSelect');

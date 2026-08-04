@@ -125,7 +125,6 @@ function initAutoSlideshow() {
     'https://images.unsplash.com/photo-1574943320219-553eb213f72d?q=80&w=1600&auto=format&fit=crop'
   ];
   
-  // Preload all images to avoid flickering
   images.forEach(src => {
     const img = new Image();
     img.src = src;
