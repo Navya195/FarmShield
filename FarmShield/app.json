@@ -1,0 +1,31 @@
+{
+  "name": "FarmShield - AI Crop Disease Detection",
+  "description": "Intelligent Agricultural Assistant with AI-powered disease detection, voice diagnosis, and multi-language support",
+  "image": "heroku/python",
+  "repository": "https://github.com/yourusername/farmshield",
+  "keywords": ["python", "flask", "agriculture", "ai", "disease-detection", "computer-vision", "farming"],
+  "success_url": "/",
+  "env": {
+    "SECRET_KEY": {
+      "description": "Secret key for Flask sessions",
+      "generator": "secret"
+    },
+    "FLASK_ENV": {
+      "description": "Flask environment",
+      "value": "production"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "addons": [
+    {
+      "plan": "heroku-postgresql:mini"
+    }
+  ],
+  "scripts": {
+    "postdeploy": "python -c \"from app import init_default_users; init_default_users()\""
+  }
+}

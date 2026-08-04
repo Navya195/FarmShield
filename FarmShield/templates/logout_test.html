@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout Test</title>
+    <style>
+        body { font-family: Arial; background: #0f172a; color: white; padding: 40px; }
+        .container { max-width: 600px; margin: 0 auto; background: #1e293b; padding: 30px; border-radius: 10px; }
+        button { background: #4ade80; color: #0f172a; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin: 10px 0; }
+        button:hover { background: #22c55e; }
+        .output { background: #0f172a; padding: 15px; margin-top: 20px; border-radius: 6px; min-height: 100px; }
+        pre { color: #4ade80; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Logout Button - Debug Test</h1>
+        
+        <button onclick="testSession()">1. Check Session Status</button>
+        <button onclick="testLogoutAPI()">2. Test Logout API</button>
+        <button onclick="testSimpleLogout()">3. Test Simple Logout</button>
+        <button onclick="clearAllStorage()">4. Clear Storage</button>
+        
+        <div class="output">
+            <h3>Output:</h3>
+            <pre id="output">Click a button above...</pre>
+        </div>
+    </div>
+
+    <script>
+        function log(msg) {
+            document.getElementById('output').textContent += '\n' + msg;
+        }
+
+        function clearOutput() {
+            document.getElementById('output').textContent = '';
+        }
+
+        async function testSession() {
+            clearOutput();
+            log('🔍 Checking session...');
+            try {
+                const res = await fetch('/api/auth/session', {credentials: 'same-origin'});
+                const data = await res.json();
+                log('✅ Session data:');
+                log(JSON.stringify(data, null, 2));
+            } catch (e) {
+                log('❌ Error: ' + e.message);
+            }
+        }
+
+        async function testLogoutAPI() {
+            clearOutput();
+            log('📤 Calling /logout endpoint...');
+            try {
+                const res = await fetch('/logout', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const data = await res.json();
+                log('✅ Logout response:');
+                log(JSON.stringify(data, null, 2));
+                log('Status: ' + res.status);
+            } catch (e) {
+                log('❌ Error: ' + e.message);
+            }
+        }
+
+        function testSimpleLogout() {
+            clearOutput();
+            log('🚀 Testing simple logout flow...');
+            
+            if (confirm('Logout?')) {
+                log('✅ Confirmation accepted');
+                
+                localStorage.clear();
+                log('✅ localStorage cleared');
+                
+                sessionStorage.clear();
+                log('✅ sessionStorage cleared');
+                
+                log('📍 Redirecting to /login in 2 seconds...');
+                setTimeout(() => {
+                    window.location = '/login';
+                }, 2000);
+            } else {
+                log('❌ Confirmation cancelled');
+            }
+        }
+
+        function clearAllStorage() {
+            clearOutput();
+            localStorage.clear();
+            sessionStorage.clear();
+            log('✅ All storage cleared');
+            log('localStorage length: ' + localStorage.length);
+            log('sessionStorage length: ' + sessionStorage.length);
+        }
+    </script>
+</body>
+</html>

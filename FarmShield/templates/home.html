@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-mode="normal">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FarmShield – Home</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* Notification animations */
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes slideOutRight {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+    
+    /* Fixed buttons styling enhancement */
+    .farmer-mode-toggle {
+      position: fixed !important;
+      bottom: 120px !important;
+      left: 20px !important;
+      width: 60px !important;
+      height: 60px !important;
+      background: #4ade80 !important;
+      border: none !important;
+      border-radius: 50% !important;
+      color: white !important;
+      font-size: 24px !important;
+      cursor: pointer !important;
+      box-shadow: 0 4px 20px rgba(74, 222, 128, 0.4) !important;
+      transition: all 0.3s ease !important;
+      z-index: 1000 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    
+    .farmer-mode-toggle:hover {
+      background: #22c55e !important;
+      transform: scale(1.1) !important;
+      box-shadow: 0 6px 25px rgba(74, 222, 128, 0.6) !important;
+    }
+    
+    .farmer-mode-toggle:active {
+      transform: scale(0.95) !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar with only Home and Dashboard -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">
+      <img src="{{ url_for('static', filename='images/farmshield-exact-logo.png') }}" alt="FarmShield" class="logo-image" title="FarmShield - Crop Disease Detection" style="width:60px;height:60px;object-fit:contain;">
+      <span>Farm<strong>Shield</strong></span>
+    </div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="/" class="nav-link active"><i class="fas fa-home"></i> Home</a></li>
+      <li><a href="/dashboard" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+      {% if session.get('user') %}
+        <li><button onclick="handleLogout()" class="nav-link" style="background:none; border:none; cursor:pointer; font-size:1rem; font-weight:600; color:inherit;"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
+      {% else %}
+        <li><a href="/login" class="nav-link"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+      {% endif %}
+    </ul>
+    <div class="nav-actions">
+      <button class="theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode">
+        <i class="fas fa-moon"></i>
+      </button>
+      <button class="voice-btn" id="voiceBtn" title="Voice Assistant" onclick="startVoiceAssistant()">
+        <i class="fas fa-microphone"></i>
+      </button>
+      <button class="voice-btn" id="settingsBtn" title="Settings" onclick="alert('Settings menu coming soon!')" style="margin-left: 10px;">
+        <i class="fas fa-cog"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section (first) -->
+  <section class="hero" id="home">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <div class="hero-badge"><i class="fas fa-robot"></i> AI-Powered Agriculture</div>
+      <h1 class="hero-title">Smart AI Protection<br /><span class="gradient-text">for Modern Farming</span></h1>
+      <p class="hero-subtitle">Voice-based crop diagnosis, one‑tap scanning, offline AI mode, and intelligent recommendations for Indian farmers in regional languages.</p>
+      <div class="hero-btns">
+        <button class="farmer-btn-text" onclick="startCameraScan()"><i class="fas fa-camera"></i> Scan Crop Now</button>
+        <button class="farmer-btn-text outline" onclick="startVoiceAssistant()"><i class="fas fa-microphone"></i> Voice Diagnosis</button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item"><span class="stat-num" data-target="38">38</span><span>+</span><p>Diseases Detected</p></div>
+        <div class="stat-item"><span class="stat-num" data-target="97">97</span><span>%</span><p>Accuracy Rate</p></div>
+        <div class="stat-item"><span class="stat-num" data-target="50000">50,000</span><span>+</span><p>Farmers Helped</p></div>
+        <div class="stat-item"><span class="stat-num" data-target="14">14</span><span>+</span><p>Regional Languages</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Traffic Light (Disease Severity) Section (second) -->
+  <section class="traffic-light-section">
+    <div class="section-header">
+      <h2><i class="fas fa-traffic-light"></i> Disease Severity System</h2>
+      <p>Simple color‑coded system for easy understanding</p>
+    </div>
+    <div class="traffic-light-grid">
+      <div class="tl-card green">
+        <div class="tl-icon"><i class="fas fa-check-circle"></i></div>
+        <h3>Green - Healthy</h3>
+        <p>No disease detected. Continue regular care.</p>
+      </div>
+      <div class="tl-card yellow">
+        <div class="tl-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <h3>Yellow - Moderate Risk</h3>
+        <p>Early stage disease. Monitor closely.</p>
+      </div>
+      <div class="tl-card orange">
+        <div class="tl-icon"><i class="fas fa-exclamation-circle"></i></div>
+        <h3>Orange - High Risk</h3>
+        <p>Disease spreading. Immediate action needed.</p>
+      </div>
+      <div class="tl-card red">
+        <div class="tl-icon"><i class="fas fa-skull-crossbones"></i></div>
+        <h3>Red - Critical</h3>
+        <p>Severe infection. Emergency treatment required.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Detect Disease Section (third) -->
+  <section class="detect-section" id="detect">
+    <div class="section-header">
+      <h2><i class="fas fa-microscope"></i> AI Disease Detection</h2>
+      <p>Upload leaf image or use camera for instant diagnosis</p>
+    </div>
+    <div class="detect-container">
+      <div class="upload-options">
+        <div class="upload-card" onclick="startCameraScan()">
+          <div class="upload-icon"><i class="fas fa-camera"></i></div>
+          <h3>One‑Tap Camera</h3>
+          <p>Instant scan with smartphone camera</p>
+        </div>
+        <div class="upload-card" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon"><i class="fas fa-upload"></i></div>
+          <h3>Upload Image</h3>
+          <p>Select from gallery</p>
+        </div>
+        <div class="upload-card" onclick="startVoiceAssistant()">
+          <div class="upload-icon"><i class="fas fa-microphone"></i></div>
+          <h3>Voice Diagnosis</h3>
+          <p>Describe symptoms verbally</p>
+        </div>
+      </div>
+      <div class="result-container">
+        <div class="preview-box" id="previewBox">
+          <div class="preview-placeholder"><i class="fas fa-leaf"></i><p>Image will appear here</p></div>
+          <img id="previewImg" src="" alt="Leaf Preview" class="hidden" />
+        </div>
+        <div class="result-box" id="resultBox">
+          <div class="result-placeholder"><i class="fas fa-robot"></i><p>AI analysis results will appear here</p></div>
+          <div class="result-content hidden" id="resultContent"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer (kept, download block removed) -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="nav-brand"><img src="{{ url_for('static', filename='images/farmshield-exact-logo.png') }}" alt="FarmShield" class="logo-image" style="width: 45px; height: 45px;"><span>Farm<strong>Shield</strong></span></div>
+          <p>Intelligent Agricultural Assistant for Indian Farmers</p>
+          <div class="footer-features">
+            <span><i class="fas fa-microphone"></i> Voice Diagnosis</span>
+            <span><i class="fas fa-camera"></i> One‑Tap Scan</span>
+            <span><i class="fas fa-wifi-slash"></i> Offline Mode</span>
+            <span><i class="fas fa-language"></i> Regional Languages</span>
+          </div>
+        </div>
+        <div class="footer-links">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="#home"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="#detect"><i class="fas fa-camera"></i> Disease Detection</a></li>
+          </ul>
+        </div>
+        <div class="footer-support">
+          <h4>Support</h4>
+          <ul>
+            <li><a href="#" onclick="callKVK()"><i class="fas fa-phone"></i> KVK Helpline</a></li>
+            <li><a href="#" onclick="callAgricultureDept()"><i class="fas fa-phone"></i> Agriculture Dept</a></li>
+            <li><a href="#" onclick="callExpertHelpline()"><i class="fas fa-phone"></i> Expert Helpline</a></li>
+            <li><a href="#"><i class="fas fa-question-circle"></i> FAQ</a></li>
+            <li><a href="#"><i class="fas fa-book"></i> User Guide</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 FarmShield. Built with <i class="fas fa-heart"></i> for Indian Farmers</p>
+        <div class="footer-bottom-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Use</a>
+          <a href="#">Contact Us</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Fixed utility buttons -->
+  <button class="farmer-mode-toggle" id="farmerModeToggle" title="Toggle Farmer Mode" onclick="toggleFarmerMode()"><i class="fas fa-tractor"></i></button>
+  <button class="camera-scan" id="cameraScan" title="One‑Tap Camera Scan" onclick="startCameraScan()"><i class="fas fa-camera"></i></button>
+  <div class="offline-mode" id="offlineMode" onclick="alert('Network status: ' + (navigator.onLine ? 'Online' : 'Offline'))" style="cursor: pointer;"><i class="fas fa-wifi"></i><span>Online Mode</span></div>
+
+  <!-- Camera Scan Modal (Glassmorphism design) -->
+  <div id="cameraModal" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:2000; backdrop-filter:blur(8px); padding:20px;">
+    <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:24px; width:100%; max-w:480px; position:relative; box-shadow:var(--shadow-lg);">
+      <button id="closeCameraModal" style="position:absolute; top:16px; right:16px; font-size:1.5rem; color:var(--text-muted); cursor:pointer; background:none; border:none; outline:none;"><i class="fas fa-times"></i></button>
+      <h3 style="font-weight:700; font-size:1.3rem; margin-bottom:16px; color:var(--farmer-primary); display:flex; align-items:center; gap:8px;"><i class="fas fa-camera"></i> Crop Leaf Scanner</h3>
+      
+      <!-- Video Element or Error Container -->
+      <div id="cameraContainer" style="background:#000; border-radius:12px; overflow:hidden; aspect-ratio:4/3; margin-bottom:20px; display:flex; align-items:center; justify-content:center; position:relative;">
+        <video id="cameraVideo" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+        <div id="cameraError" class="hidden" style="color:var(--red-danger); text-align:center; padding:20px; font-weight:500;"></div>
+      </div>
+      
+      <!-- Modal Buttons -->
+      <div style="display:flex; gap:12px;">
+        <button id="cameraUploadBtn" style="flex:1; border:1px solid var(--farmer-primary); color:var(--farmer-primary); padding:12px; border-radius:8px; font-weight:600; text-align:center; cursor:pointer; background:var(--bg-card); transition:all 0.3s;"><i class="fas fa-upload"></i> Gallery</button>
+        <button id="cameraCaptureBtn" style="flex:1; background:var(--farmer-primary); color:white; padding:12px; border-radius:8px; font-weight:600; text-align:center; cursor:pointer; border:none; transition:all 0.3s;"><i class="fas fa-camera"></i> Capture</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept="image/*" hidden />
+
+  <!-- Voice Diagnosis Modal -->
+  <div id="voiceModal" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:2000; backdrop-filter:blur(8px); padding:20px; overflow-y:auto;">
+    <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:24px; width:100%; max-width:900px; position:relative; box-shadow:var(--shadow-lg); max-height:90vh; overflow-y:auto;">
+      <button id="closeVoiceModal" style="position:absolute; top:16px; right:16px; font-size:1.5rem; color:var(--text-muted); cursor:pointer; background:none; border:none; outline:none; z-index:10;"><i class="fas fa-times"></i></button>
+      
+      <h3 style="font-weight:700; font-size:1.5rem; margin-bottom:8px; color:var(--farmer-primary); display:flex; align-items:center; gap:10px;">
+        <i class="fas fa-microphone-alt"></i> Voice Diagnosis System
+      </h3>
+      <p style="color:var(--text-muted); margin-bottom:24px; font-size:0.95rem;">Speak your crop problem and get instant AI diagnosis</p>
+      
+      <!-- Language Selector -->
+      <div style="margin-bottom:24px; padding:16px; background:var(--bg-secondary); border-radius:12px; border:1px solid var(--border);">
+        <label style="display:block; font-weight:600; margin-bottom:12px; color:var(--text-primary);">
+          <i class="fas fa-language"></i> Select Language
+        </label>
+        <select id="voiceLanguageSelect" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text-primary); font-size:1rem; font-weight:500;">
+          <option value="en">English</option>
+          <option value="hi">हिंदी (Hindi)</option>
+          <option value="te">తెలుగు (Telugu)</option>
+          <option value="ta">தமிழ் (Tamil)</option>
+          <option value="kn">ಕನ್ನಡ (Kannada)</option>
+          <option value="ml">മലയാളം (Malayalam)</option>
+          <option value="mr">मराठी (Marathi)</option>
+          <option value="bn">বাংলা (Bengali)</option>
+          <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+          <option value="gu">ગુજરાતી (Gujarati)</option>
+        </select>
+      </div>
+
+      <!-- Microphone Control -->
+      <div style="text-align:center; margin-bottom:24px; padding:32px; background:var(--bg-secondary); border-radius:12px; border:1px solid var(--border);">
+        <button id="voiceMicButton" style="width:120px; height:120px; border-radius:50%; background:linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary)); border:4px solid var(--bg-card); box-shadow:0 8px 25px rgba(34, 197, 94, 0.3); cursor:pointer; transition:all 0.3s ease; display:flex; align-items:center; justify-content:center; margin:0 auto; outline:none;">
+          <i class="fas fa-microphone" style="font-size:3rem; color:white;"></i>
+        </button>
+        <p id="voiceStatus" style="margin-top:20px; font-weight:600; font-size:1.1rem; color:var(--text-primary);">Click microphone to start</p>
+        <div id="voiceLoader" class="hidden" style="margin-top:16px; display:flex; align-items:center; justify-content:center; gap:8px; color:var(--farmer-primary);">
+          <i class="fas fa-spinner fa-spin"></i>
+          <span>Processing...</span>
+        </div>
+      </div>
+
+      <!-- Recognized Text Display -->
+      <div id="recognizedTextContainer" style="margin-bottom:24px; padding:20px; background:var(--bg-secondary); border-radius:12px; border:1px solid var(--border); display:none;">
+        <h4 style="font-weight:600; margin-bottom:12px; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
+          <i class="fas fa-comment-dots"></i> Your Query
+        </h4>
+        <p id="recognizedText" style="font-size:1.1rem; line-height:1.6; color:var(--text-primary); font-style:italic;"></p>
+      </div>
+
+      <!-- Diagnosis Result -->
+      <div id="diagnosisResult" style="display:none;"></div>
+
+      <!-- Tips -->
+      <div style="background:var(--bg-secondary); border-left:4px solid var(--farmer-primary); border-radius:8px; padding:16px; margin-top:20px;">
+        <h4 style="font-weight:600; margin-bottom:8px; color:var(--farmer-primary); display:flex; align-items:center; gap:8px;">
+          <i class="fas fa-lightbulb"></i> Tips for Better Results
+        </h4>
+        <ul style="margin:0; padding-left:20px; color:var(--text-muted); font-size:0.95rem; line-height:1.8;">
+          <li>Speak clearly in your selected language</li>
+          <li>Mention the crop name (tomato, potato, rice, etc.)</li>
+          <li>Describe symptoms (spots, yellowing, wilting, etc.)</li>
+          <li>Mention severity (few leaves, many leaves, entire plant)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Route Protection Script (must load first) -->
+  <script src="{{ url_for('static', filename='js/route-protection.js') }}"></script>
+  
+  <!-- Voice Diagnosis Script -->
+  <script src="{{ url_for('static', filename='js/voice-diagnosis.js') }}"></script>
+  
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/farmer.js') }}"></script>
+  <script>
+    // ============================================
+    // ============================================  
+    // NO JAVASCRIPT NEEDED - SIMPLE LINK LOGOUT
+    // ============================================
+    // Logout now works as a simple link to /api/logout
+
+    // ============================================
+    // VOICE DIAGNOSIS FUNCTIONS - FULLY FUNCTIONAL
+    // ============================================
+
+    function startVoiceAssistant() {
+      console.log('🎤 Starting voice assistant...');
+      const voiceModal = document.getElementById('voiceModal');
+      if (voiceModal) {
+        voiceModal.classList.remove('hidden');
+        
+        // Initialize voice diagnosis if not already done
+        if (!window.voiceDiagnosis) {
+          console.log('🔧 Initializing voice diagnosis system...');
+          // Voice diagnosis will be initialized by the voice-diagnosis.js script
+          setTimeout(() => {
+            if (window.voiceDiagnosis) {
+              window.voiceDiagnosis.setLanguage('en');
+              console.log('✅ Voice diagnosis initialized');
+            } else {
+              console.warn('⚠️ Voice diagnosis not available');
+            }
+          }, 500);
+        } else {
+          // Set default language
+          window.voiceDiagnosis.setLanguage('en');
+        }
+        
+        // Reset UI state
+        const statusElement = document.getElementById('voiceStatus');
+        if (statusElement) {
+          statusElement.textContent = 'Click microphone to start';
+        }
+        
+        const micButton = document.getElementById('voiceMicButton');
+        if (micButton) {
+          micButton.classList.remove('recording');
+          micButton.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem; color:white;"></i>';
+        }
+        
+        // Hide previous results
+        const diagnosisResult = document.getElementById('diagnosisResult');
+        if (diagnosisResult) {
+          diagnosisResult.style.display = 'none';
+        }
+        
+        const recognizedTextContainer = document.getElementById('recognizedTextContainer');
+        if (recognizedTextContainer) {
+          recognizedTextContainer.style.display = 'none';
+        }
+      }
+    }
+    
+    window.startVoiceAssistant = startVoiceAssistant;
+
+    // Camera Scan Functions - FIXED AND ENHANCED
+    let cameraStream = null;
+
+    function startCameraScan() {
+      console.log('🎥 Starting camera scan...');
+      const modal = document.getElementById('cameraModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        setTimeout(() => initCamera(), 100);
+      }
+    }
+    
+    window.startCameraScan = startCameraScan;
+
+    function closeCameraModal() {
+      const modal = document.getElementById('cameraModal');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+      // Stop camera stream
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+    }
+    
+    window.closeCameraModal = closeCameraModal;
+
+    // Close modal button handler
+    document.addEventListener('DOMContentLoaded', () => {
+      const closeCameraBtn = document.getElementById('closeCameraModal');
+      if (closeCameraBtn) {
+        closeCameraBtn.addEventListener('click', closeCameraModal);
+      }
+      
+      const closeVoiceBtn = document.getElementById('closeVoiceModal');
+      if (closeVoiceBtn) {
+        closeVoiceBtn.addEventListener('click', () => {
+          const voiceModal = document.getElementById('voiceModal');
+          if (voiceModal) voiceModal.classList.add('hidden');
+        });
+      }
+    });
+      const video = document.getElementById('cameraVideo');
+      const errorDiv = document.getElementById('cameraError');
+      
+      if (!video || !errorDiv) {
+        console.error('❌ Camera elements not found');
+        return;
+      }
+
+      // Clear any previous errors
+      errorDiv.classList.add('hidden');
+      video.style.display = 'block';
+      
+      try {
+        // Check if browser supports camera
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Camera not supported in this browser');
+        }
+
+        console.log('📷 Requesting camera access...');
+        
+        // Request camera with better settings
+        const constraints = {
+          video: {
+            facingMode: 'environment', // Use back camera on mobile
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        };
+
+        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        video.srcObject = cameraStream;
+        video.onloadedmetadata = () => {
+          video.play();
+          console.log('✅ Camera initialized successfully');
+        };
+        
+      } catch (err) {
+        console.error('❌ Camera error:', err);
+        video.style.display = 'none';
+        errorDiv.classList.remove('hidden');
+        
+        let errorMessage = '❌ ';
+        if (err.name === 'NotAllowedError') {
+          errorMessage += 'Camera permission denied. Please allow camera access and try again.';
+        } else if (err.name === 'NotFoundError') {
+          errorMessage += 'No camera found. Please check your device.';
+        } else if (err.name === 'NotSupportedError') {
+          errorMessage += 'Camera not supported in this browser. Try Chrome, Edge, or Safari.';
+        } else {
+          errorMessage += 'Cannot access camera. ' + err.message;
+        }
+        
+        errorDiv.innerHTML = `
+          <div style="text-align: center; padding: 20px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444; margin-bottom: 10px;"></i>
+            <p style="margin: 10px 0;">${errorMessage}</p>
+            <button onclick="initCamera()" style="background: #4ade80; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-top: 10px;">
+              <i class="fas fa-redo"></i> Try Again
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    function capturePhoto() {
+      const video = document.getElementById('cameraVideo');
+      
+      if (!video || !cameraStream || video.videoWidth === 0) {
+        console.log('📷 No video stream, opening file picker instead');
+        document.getElementById('fileInput').click();
+        return;
+      }
+
+      try {
+        console.log('📸 Capturing photo...');
+        
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size to match video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Draw the video frame to canvas
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to blob and upload
+        canvas.toBlob(blob => {
+          if (blob) {
+            const filename = `camera-capture-${Date.now()}.jpg`;
+            console.log('📤 Uploading captured photo:', filename);
+            uploadImage(blob, filename);
+          }
+        }, 'image/jpeg', 0.9);
+        
+      } catch (err) {
+        console.error('❌ Capture error:', err);
+        showErrorNotification('Failed to capture photo. Please try again.');
+      }
+    }
+
+    async function uploadImage(file, filename) {
+      if (!file) {
+        console.error('❌ No file provided for upload');
+        return;
+      }
+
+      console.log('📤 Starting upload:', filename, 'Size:', (file.size / 1024).toFixed(1) + ' KB');
+      
+      // Show loading state
+      showLoadingNotification('🔍 Analyzing image...');
+      
+      try {
+        const formData = new FormData();
+        formData.append('file', file, filename);
+        
+        const response = await fetch('/api/predict', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ Upload successful:', data);
+        
+        displayPredictionResult(data);
+        closeCameraModal();
+        
+      } catch (err) {
+        console.error('❌ Upload error:', err);
+        showErrorNotification(`Upload failed: ${err.message}`);
+      }
+    }
+
+    function displayPredictionResult(data) {
+      const resultBox = document.getElementById('resultBox');
+      const resultContent = document.getElementById('resultContent');
+      const placeholder = resultBox.querySelector('.result-placeholder');
+      
+      if (!resultBox || !resultContent) {
+        console.error('❌ Result elements not found');
+        return;
+      }
+
+      if (data.success && data.disease) {
+        const disease = data.disease;
+        
+        resultContent.innerHTML = `
+          <div class="diagnosis-result" style="animation: slideIn 0.5s ease;">
+            <div class="diagnosis-header" style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; padding: 1rem; background: rgba(74, 222, 128, 0.1); border-radius: 12px; border-left: 4px solid #4ade80;">
+              <i class="${disease.icon || 'fas fa-leaf'}" style="font-size: 2rem; color: ${disease.color || '#4ade80'};"></i>
+              <div>
+                <h3 style="margin: 0; font-size: 1.4rem; color: var(--text-primary);">${disease.display || disease.name || 'Disease Detected'}</h3>
+                <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.9rem;">Confidence: ${Math.round((disease.confidence || 0) * 100)}%</p>
+              </div>
+            </div>
+            
+            <div class="diagnosis-details" style="display: grid; gap: 1rem;">
+              <div class="detail-card" style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px;">
+                <h4 style="color: #4ade80; margin-bottom: 0.5rem;"><i class="fas fa-seedling"></i> Crop Information</h4>
+                <p><strong>Crop:</strong> ${disease.crop || 'Unknown'}</p>
+                <p><strong>Severity:</strong> <span style="color: ${disease.color || '#f59e0b'};">${disease.severity || 'Moderate'}</span></p>
+              </div>
+              
+              ${disease.symptoms && disease.symptoms.length > 0 ? `
+              <div class="detail-card" style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px;">
+                <h4 style="color: #3b82f6; margin-bottom: 0.5rem;"><i class="fas fa-list-ul"></i> Symptoms</h4>
+                <ul style="margin: 0; padding-left: 1.2rem;">
+                  ${disease.symptoms.map(symptom => `<li style="margin-bottom: 0.3rem;">${symptom}</li>`).join('')}
+                </ul>
+              </div>
+              ` : ''}
+              
+              <div class="detail-card" style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px;">
+                <h4 style="color: #f59e0b; margin-bottom: 0.5rem;"><i class="fas fa-pills"></i> Treatment</h4>
+                <p><strong>Recommended:</strong> ${disease.pesticide || 'Consult agricultural expert'}</p>
+                ${disease.organic ? `<p><strong>Organic Alternative:</strong> ${disease.organic}</p>` : ''}
+              </div>
+            </div>
+            
+            <div class="diagnosis-actions" style="margin-top: 1.5rem; display: flex; gap: 12px; justify-content: center;">
+              <button onclick="startCameraScan()" style="background: #4ade80; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                <i class="fas fa-camera"></i> Scan Another
+              </button>
+              <button onclick="window.print()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                <i class="fas fa-print"></i> Print Report
+              </button>
+            </div>
+          </div>
+        `;
+        
+        placeholder.classList.add('hidden');
+        resultContent.classList.remove('hidden');
+        
+        // Scroll to result
+        setTimeout(() => {
+          resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+        
+        showSuccessNotification('✅ Disease analysis complete!');
+        
+      } else {
+        showErrorNotification(data.error || 'Analysis failed. Please try again.');
+      }
+    }
+
+    function closeCameraModal() {
+      const modal = document.getElementById('cameraModal');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+      
+      // Stop camera stream
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => {
+          track.stop();
+          console.log('📷 Camera stream stopped');
+        });
+        cameraStream = null;
+      }
+      
+      // Clear video element
+      const video = document.getElementById('cameraVideo');
+      if (video) {
+        video.srcObject = null;
+      }
+    }
+
+    // ============================================
+    // NOTIFICATION SYSTEM - ENHANCED
+    // ============================================
+
+    function showNotification(message, type = 'info') {
+      // Remove existing notifications
+      document.querySelectorAll('.farmshield-notification').forEach(n => n.remove());
+      
+      const notification = document.createElement('div');
+      notification.className = 'farmshield-notification';
+      
+      const colors = {
+        success: { bg: '#22c55e', border: '#16a34a' },
+        error: { bg: '#ef4444', border: '#dc2626' },
+        loading: { bg: '#3b82f6', border: '#2563eb' },
+        info: { bg: '#6b7280', border: '#4b5563' }
+      };
+      
+      const icons = {
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-circle', 
+        loading: 'fas fa-spinner fa-spin',
+        info: 'fas fa-info-circle'
+      };
+      
+      notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: linear-gradient(135deg, ${colors[type].bg}, ${colors[type].border});
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        z-index: 10000;
+        animation: slideInRight 0.5s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+        max-width: 400px;
+        font-family: 'Poppins', sans-serif;
+      `;
+      
+      notification.innerHTML = `
+        <i class="${icons[type]}"></i>
+        <span>${message}</span>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Auto remove after 3 seconds
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.style.animation = 'slideOutRight 0.3s ease';
+          setTimeout(() => notification.remove(), 300);
+        }
+      }, 3000);
+    }
+
+    // Enhanced notification functions
+    function showSuccessNotification(message) {
+      showNotification(message, 'success');
+    }
+
+    function showErrorNotification(message) {
+      showNotification(message, 'error');
+    }
+
+    function showLoadingNotification(message) {
+      showNotification(message, 'loading');
+    }Poppins', sans-serif;
+      `;
+      
+      notification.innerHTML = `
+        <i class="${icons[type]}" style="font-size: 1.2rem;"></i>
+        <span>${message}</span>
+        ${type !== 'loading' ? `
+          <button onclick="this.parentElement.remove()" style="background: none; border: none; color: white; cursor: pointer; margin-left: 10px; padding: 4px;">
+            <i class="fas fa-times"></i>
+          </button>
+        ` : ''}
+      `;
+      
+      document.body.appendChild(notification);
+      
+      if (type !== 'loading') {
+        setTimeout(() => {
+          if (notification.parentElement) {
+            notification.style.animation = 'slideOutRight 0.5s ease';
+            setTimeout(() => notification.remove(), 500);
+          }
+        }, type === 'error' ? 7000 : 4000);
+      }
+    }
+
+    // Theme Toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    }
+
+    // ============================================
+    // FARMER MODE TOGGLE - FIXED
+    // ============================================
+    
+    function toggleFarmerMode() {
+      console.log('Farmer mode toggle clicked'); // Debug log
+      const html = document.documentElement;
+      const currentMode = html.getAttribute('data-mode') || 'normal';
+      const newMode = currentMode === 'farmer' ? 'normal' : 'farmer';
+      
+      html.setAttribute('data-mode', newMode);
+      localStorage.setItem('farmerMode', newMode);
+      
+      // Visual feedback
+      const button = document.getElementById('farmerModeToggle');
+      if (button) {
+        if (newMode === 'farmer') {
+          button.style.background = '#22c55e';
+          button.innerHTML = '<i class="fas fa-tractor"></i>';
+          console.log('Switched to farmer mode');
+        } else {
+          button.style.background = '#4ade80';
+          button.innerHTML = '<i class="fas fa-tractor"></i>';
+          console.log('Switched to normal mode');
+        }
+      }
+      
+      // Show notification
+      showNotification(`Switched to ${newMode === 'farmer' ? 'Farmer' : 'Normal'} mode`, 'success');
+    }
+
+    // Make toggleFarmerMode available globally
+    window.toggleFarmerMode = toggleFarmerMode;
+
+    // Support Functions
+    function callKVK() {
+      alert('📞 KVK Helpline: 1234-567890\n\nPlease note: This is a demo number.');
+    }
+
+    function callAgricultureDept() {
+      alert('📞 Agriculture Department: 1800-180-1551\n\nIvR Service available 24/7');
+    }
+
+    function callExpertHelpline() {
+      alert('📞 Expert Helpline: 1800-270-0000\n\nConnect with agricultural experts');
+    }
+
+    // Make functions available globally  
+    window.startCameraScan = startCameraScan;
+    window.capturePhoto = capturePhoto;
+    window.callKVK = callKVK;
+    window.callAgricultureDept = callAgricultureDept;
+    window.callExpertHelpline = callExpertHelpline;
+
+    // Initialize on page load - ENHANCED
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Page loaded, initializing buttons...');
+      
+      // Theme toggle
+      const themeToggle = document.getElementById('themeToggle');
+      if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+        console.log('Theme toggle initialized');
+      }
+
+      // Farmer mode toggle - FIXED
+      const farmerToggle = document.getElementById('farmerModeToggle');
+      if (farmerToggle) {
+        farmerToggle.addEventListener('click', toggleFarmerMode);
+        console.log('Farmer mode toggle initialized');
+        
+        // Set initial mode from localStorage
+        const savedMode = localStorage.getItem('farmerMode') || 'normal';
+        document.documentElement.setAttribute('data-mode', savedMode);
+        
+        // Update button appearance based on current mode
+        if (savedMode === 'farmer') {
+          farmerToggle.style.background = '#22c55e';
+        } else {
+          farmerToggle.style.background = '#4ade80';
+        }
+      } else {
+        console.error('Farmer mode toggle button not found!');
+      }
+
+      // Simple test - ensure logout is available
+      console.log('✅ Logout system ready:', typeof window.performLogout === 'function');
+        console.error('❌ Logout function not available!');
+      }
+
+      // Camera modal close button
+      const closeCameraBtn = document.getElementById('closeCameraModal');
+      if (closeCameraBtn) {
+        closeCameraBtn.addEventListener('click', closeCameraModal);
+        console.log('Camera modal close button initialized');
+      }
+
+      // Camera capture button
+      const captureBtn = document.getElementById('cameraCaptureBtn');
+      if (captureBtn) {
+        captureBtn.addEventListener('click', capturePhoto);
+      }
+
+      // Gallery upload button
+      const uploadBtn = document.getElementById('cameraUploadBtn');
+      const fileInput = document.getElementById('fileInput');
+      if (uploadBtn && fileInput) {
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+          if (e.target.files[0]) {
+            uploadImage(e.target.files[0], e.target.files[0].name);
+          }
+        });
+      }
+
+      // Close Voice Modal
+      const closeVoiceModal = document.getElementById('closeVoiceModal');
+      if (closeVoiceModal) {
+        closeVoiceModal.addEventListener('click', () => {
+          const voiceModal = document.getElementById('voiceModal');
+          if (voiceModal) {
+            voiceModal.classList.add('hidden');
+            // Stop recording if active
+            if (window.voiceDiagnosis && window.voiceDiagnosis.isRecording) {
+              window.voiceDiagnosis.stopRecording();
+            }
+          }
+        });
+      }
+
+      // Language selector change
+      const languageSelect = document.getElementById('voiceLanguageSelect');
+      if (languageSelect) {
+        languageSelect.addEventListener('change', (e) => {
+          if (window.voiceDiagnosis) {
+            window.voiceDiagnosis.setLanguage(e.target.value);
+          }
+        });
+      }
+
+      // Microphone button click
+      const micButton = document.getElementById('voiceMicButton');
+      if (micButton) {
+        micButton.addEventListener('click', () => {
+          if (window.voiceDiagnosis) {
+            if (window.voiceDiagnosis.isRecording) {
+              window.voiceDiagnosis.stopRecording();
+            } else {
+              window.voiceDiagnosis.startRecording();
+              const container = document.getElementById('recognizedTextContainer');
+              if (container) {
+                container.style.display = 'block';
+              }
+            }
+          }
+        });
+      }
+
+      // Check for OAuth success messages
+      const urlParams = new URLSearchParams(window.location.search);
+      const oauthSuccess = urlParams.get('oauth_success');
+      
+      if (oauthSuccess === 'google') {
+        showSuccessNotification('✅ Successfully logged in with Google! Welcome to FarmShield.');
+      } else if (oauthSuccess === 'microsoft') {
+        showSuccessNotification('✅ Successfully logged in with Microsoft! Welcome to FarmShield.');
+      }
+    });
+
+    function showSuccessNotification(message) {
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+        z-index: 10000;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideInRight 0.5s ease;
+        max-width: 400px;
+      `;
+      
+      notification.innerHTML = `
+        <i class="fas fa-check-circle" style="font-size: 1.2rem;"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" style="background: none; border: none; color: white; cursor: pointer; margin-left: 10px; font-size: 1.2rem;">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        if (notification.parentElement) {
+          notification.remove();
+        }
+      }, 5000);
+    }
+
+    // Restore theme preference
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      const savedMode = localStorage.getItem('farmerMode') || 'normal';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.documentElement.setAttribute('data-mode', savedMode);
+    });
+  </script>
+</body>
+</html>
+
+    // ============================================
+    // LOGOUT FUNCTION - FIXED AND VERIFIED
+    // ============================================
+    
+    async function handleLogout() {
+      console.log('🔐 Logout initiated...');
+      
+      // Show confirmation dialog
+      if (!confirm('Are you sure you want to logout from FarmShield?')) {
+        console.log('ℹ️ Logout cancelled');
+        return;
+      }
+      
+      // Show loading notification
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        z-index: 10000;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      `;
+      
+      notification.innerHTML = `
+        <i class="fas fa-spinner fa-spin" style="font-size: 1.2rem;"></i>
+        <span>Logging out...</span>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      try {
+        console.log('📤 Sending logout request to /logout...');
+        
+        const response = await fetch('/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('✅ Logout response received:', response.status);
+        
+        if (response.ok) {
+          console.log('✅ Session cleared successfully');
+          notification.remove();
+          
+          // Show success notification
+          const successNotif = document.createElement('div');
+          successNotif.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+            z-index: 10000;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          `;
+          
+          successNotif.innerHTML = `
+            <i class="fas fa-check-circle" style="font-size: 1.2rem;"></i>
+            <span>✅ Logged out successfully. Redirecting...</span>
+          `;
+          
+          document.body.appendChild(successNotif);
+          
+          // Wait 1 second then redirect to login
+          setTimeout(() => {
+            console.log('🔄 Redirecting to login page...');
+            window.location.href = '/login';
+          }, 1000);
+        } else {
+          const data = await response.json();
+          console.error('❌ Logout failed with status:', response.status, data);
+          throw new Error(`HTTP ${response.status}: ${data.error || response.statusText}`);
+        }
+        
+      } catch (error) {
+        console.error('❌ Logout error:', error);
+        notification.remove();
+        
+        // Show error notification
+        const errorNotif = document.createElement('div');
+        errorNotif.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: linear-gradient(135deg, #ef4444, #dc2626);
+          color: white;
+          padding: 1rem 1.5rem;
+          border-radius: 12px;
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+          z-index: 10000;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        `;
+        
+        errorNotif.innerHTML = `
+          <i class="fas fa-exclamation-circle" style="font-size: 1.2rem;"></i>
+          <span>❌ Logout failed: ${error.message}</span>
+        `;
+        
+        document.body.appendChild(errorNotif);
+        
+        setTimeout(() => {
+          if (errorNotif.parentElement) {
+            errorNotif.remove();
+          }
+        }, 5000);
+      }
+    }
+    
+    // Make logout function available globally
+    window.handleLogout = handleLogout;

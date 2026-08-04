@@ -1,0 +1,10 @@
+FarmShield: Fix OTP security and logout functionality
+
+- Remove OTP exposure from UI completely
+- Send OTP only via Gmail SMTP
+- Never display OTP in frontend, console, or API response
+- Fix logout button to clear all sessions and storage
+- Implement proper session clearing on logout
+- Add route protection to prevent back button access
+- Production-ready authentication flow
+- All security requirements implemented

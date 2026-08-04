@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FarmShield – Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #f1f5f9;
+    }
+    
+    .login-container {
+      background: rgba(30, 41, 59, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 3rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    
+    .logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .logo h1 {
+      font-size: 2rem;
+      color: #4ade80;
+      margin-bottom: 0.5rem;
+    }
+    
+    .logo p {
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 0.75rem;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      color: #f1f5f9;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+    
+    .form-input::placeholder {
+      color: #64748b;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: #4ade80;
+      box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.15);
+      background: rgba(255, 255, 255, 0.12);
+    }
+    
+    .remember-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .checkbox-group input {
+      accent-color: #4ade80;
+    }
+    
+    .forgot-link {
+      color: #4ade80;
+      text-decoration: none;
+      transition: opacity 0.3s;
+    }
+    
+    .forgot-link:hover {
+      opacity: 0.8;
+    }
+    
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+    
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(74, 222, 128, 0.4);
+    }
+    
+    .login-btn:active {
+      transform: translateY(0);
+    }
+    
+    .login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .divider {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.85rem;
+      margin: 1.5rem 0;
+      position: relative;
+    }
+    
+    .divider::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 42%;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .divider::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 50%;
+      width: 42%;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .social-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+    
+    .social-btn {
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      color: #cbd5e1;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: inherit;
+    }
+    
+    .social-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+    
+    .signup-link {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
+    
+    .signup-link a {
+      color: #4ade80;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    
+    .signup-link a:hover {
+      text-decoration: underline;
+    }
+    
+    .error-message {
+      display: none;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
+    
+    .error-message.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <h1>🌱 FarmShield</h1>
+      <p>Intelligent Agricultural Assistant</p>
+    </div>
+    
+    <div class="error-message" id="errorMessage"></div>
+    
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-envelope"></i> Email Address</label>
+        <input type="email" class="form-input" id="emailInput" placeholder="farmer@example.com" required/>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-lock"></i> Password</label>
+        <input type="password" class="form-input" id="passwordInput" placeholder="••••••••" required/>
+      </div>
+      
+      <div class="remember-row">
+        <div class="checkbox-group">
+          <input type="checkbox" id="rememberMe"/>
+          <label for="rememberMe">Remember me</label>
+        </div>
+        <a href="#" class="forgot-link" id="forgotPasswordLink">Forgot password?</a>
+      </div>
+      
+      <button type="submit" class="login-btn">
+        <i class="fas fa-sign-in-alt"></i> Sign In
+      </button>
+      
+      <div class="divider">or continue with</div>
+      
+      <div class="social-buttons">
+        <button type="button" class="social-btn" id="googleLogin">
+          <i class="fab fa-google"></i> Google
+        </button>
+        <button type="button" class="social-btn" id="microsoftLogin">
+          <i class="fab fa-microsoft"></i> Microsoft
+        </button>
+      </div>
+      
+      <div class="signup-link">
+        New to FarmShield? <a href="/signup">Create an account</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const errorMessage = document.getElementById('errorMessage');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const rememberMe = document.getElementById('rememberMe');
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const googleLogin = document.getElementById('googleLogin');
+    const microsoftLogin = document.getElementById('microsoftLogin');
+
+    // Check if already logged in
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => {
+        if (data.authenticated) {
+          window.location.href = '/';
+        }
+      })
+      .catch(err => console.log('Session check:', err));
+
+    // Form submission
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMessage.classList.remove('show');
+      
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const remember = rememberMe.checked;
+      
+      const btn = loginForm.querySelector('.login-btn');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+      
+      try {
+        const resp = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, remember })
+        });
+        
+        const data = await resp.json();
+        
+        if (resp.ok) {
+          window.location.href = '/dashboard';
+        } else {
+          showError(data.error || 'Login failed');
+        }
+      } catch (err) {
+        console.error(err);
+        showError('Network error. Please try again.');
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    });
+
+    // Forgot password
+    forgotPasswordLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      alert('Password reset feature coming soon!');
+    });
+
+    // Google login
+    googleLogin.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const btn = googleLogin;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+      
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/auth/google';
+      } catch (error) {
+        console.error('Google OAuth error:', error);
+        showError('Failed to start Google authentication');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fab fa-google"></i> Google';
+      }
+    });
+
+    // Microsoft login
+    microsoftLogin.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const btn = microsoftLogin;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+      
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/auth/microsoft';
+      } catch (error) {
+        console.error('Microsoft OAuth error:', error);
+        showError('Failed to start Microsoft authentication');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fab fa-microsoft"></i> Microsoft';
+      }
+    });
+
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.classList.add('show');
+    }
+  </script>
+</body>
+</html>

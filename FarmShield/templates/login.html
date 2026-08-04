@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FarmShield – Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* Login Page Specific Styles */
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #546e7a 0%, #455a64 50%, #37474f 100%);
+      position: relative;
+      overflow: hidden;
+      padding: 1rem;
+    }
+
+    .logo-header {
+      position: absolute;
+      top: 40px;
+      left: 40px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .logo-header img {
+      width: 60px;
+      height: 60px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+
+    .logo-header span {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #4ade80;
+      display: none;
+    }
+
+    .bg-slideshow {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      display: block;
+    }
+
+    .bg-slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 1.5s ease-in-out;
+    }
+
+    .bg-slide.active {
+      opacity: 0.4;
+    }
+
+    .bg-slide-1 { background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80'); }
+    .bg-slide-2 { background-image: url('https://images.unsplash.com/photo-1560493676-04071c5f467b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80'); }
+    .bg-slide-3 { background-image: url('https://images.unsplash.com/photo-1593113598332-cd288d649433?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80'); }
+    .bg-slide-4 { background-image: url('https://images.unsplash.com/photo-1586771107445-d3caee129546?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80'); }
+    .bg-slide-5 { background-image: url('https://images.unsplash.com/photo-1555255707-c07966088b7b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80'); }
+    .bg-slide-6 { background-image: url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80'); }
+    .bg-slide-7 { background-image: url('https://images.unsplash.com/photo-1574943320219-553eb213f72d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80'); }
+    .bg-slide-8 { background-image: url('https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80'); }
+
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: block;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #4ade80;
+      border-radius: 50%;
+      animation: floatParticle 15s infinite linear;
+    }
+
+    .login-card {
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 3rem 2.5rem;
+      width: 100%;
+      max-width: 480px;
+      z-index: 2;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .ai-logo {
+      font-size: 3rem;
+      color: #4ade80;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .ai-logo img {
+      width: 150px;
+      height: 150px;
+      filter: drop-shadow(0 0 20px rgba(74, 222, 128, 0.4));
+    }
+
+    .login-header h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #4ade80;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.5px;
+    }
+
+    .login-header p {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      font-weight: 400;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .form-label i {
+      color: #94a3b8;
+    }
+
+    .input-with-icon {
+      position: relative;
+    }
+
+    .input-with-icon i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-size: 1.1rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px 16px 14px 48px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      color: #f1f5f9;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .form-input::placeholder {
+      color: #64748b;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #4ade80;
+      box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.15);
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .password-toggle:hover {
+      color: #4ade80;
+    }
+
+    .remember-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #4ade80;
+    }
+
+    .forgot-link {
+      color: #4ade80;
+      text-decoration: none;
+      transition: opacity 0.3s;
+    }
+
+    .forgot-link:hover {
+      opacity: 0.8;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(74, 222, 128, 0.4);
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    .divider {
+      text-align: center;
+      position: relative;
+      margin: 1.5rem 0;
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+
+    .divider::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 42%;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .divider::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 50%;
+      width: 42%;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .social-login {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    .social-btn {
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      color: #cbd5e1;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .social-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .social-btn:active {
+      transform: translateY(0);
+    }
+
+    .social-btn i {
+      font-size: 1.1rem;
+    }
+
+    #googleLogin:hover {
+      border-color: #db4437;
+      background: rgba(219, 68, 55, 0.1);
+    }
+
+    #microsoftLogin:hover {
+      border-color: #00a1f1;
+      background: rgba(0, 161, 241, 0.1);
+    }
+
+    .register-link {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
+
+    .register-link a {
+      color: #4ade80;
+      text-decoration: none;
+      font-weight: 600;
+      margin-left: 4px;
+    }
+
+    .register-link a:hover {
+      text-decoration: underline;
+    }
+
+    .theme-toggle-login {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 3;
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle-login:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: rotate(30deg);
+    }
+
+    .floating-leaves {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .leaf {
+      position: absolute;
+      font-size: 1.5rem;
+      color: #4ade80;
+      opacity: 0.3;
+      animation: floatLeaf 20s infinite linear;
+    }
+
+    /* Animations */
+    @keyframes floatParticle {
+      0% { transform: translateY(100vh) translateX(0) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.8; }
+      90% { opacity: 0.8; }
+      100% { transform: translateY(-100px) translateX(100px) rotate(360deg); opacity: 0; }
+    }
+
+    @keyframes floatLeaf {
+      0% { transform: translateY(100vh) translateX(0) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.4; }
+      90% { opacity: 0.4; }
+      100% { transform: translateY(-100px) translateX(calc(100vw - 100px)) rotate(720deg); opacity: 0; }
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 2rem 1.5rem;
+      }
+      
+      .social-login {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    
+    <!-- Logo in top-left corner -->
+    <div class="logo-header">
+      <img src="{{ url_for('static', filename='images/farmshield-exact-logo.png') }}" alt="FarmShield">
+    </div>
+    
+    <div class="bg-slideshow">
+      <div class="bg-slide bg-slide-1 active"></div>
+      <div class="bg-slide bg-slide-2"></div>
+      <div class="bg-slide bg-slide-3"></div>
+      <div class="bg-slide bg-slide-4"></div>
+      <div class="bg-slide bg-slide-5"></div>
+      <div class="bg-slide bg-slide-6"></div>
+      <div class="bg-slide bg-slide-7"></div>
+      <div class="bg-slide bg-slide-8"></div>
+    </div>
+
+    <div class="particles" id="particles"></div>
+    <div class="floating-leaves" id="floatingLeaves"></div>
+
+    <button class="theme-toggle-login" id="themeToggle">
+      <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="login-card">
+      <div class="login-header">
+        <div class="ai-logo">
+          <img src="{{ url_for('static', filename='images/farmshield-exact-logo.png') }}" alt="FarmShield">
+        </div>
+        <h1>FarmShield</h1>
+        <p>Intelligent Agricultural Assistant</p>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-user"></i> Email Address</label>
+          <div class="input-with-icon">
+            <i class="fas fa-envelope"></i>
+            <input type="email" class="form-input" id="emailInput" placeholder="farmer@example.com" required/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-lock"></i> Password</label>
+          <div class="input-with-icon">
+            <i class="fas fa-key"></i>
+            <input type="password" class="form-input" id="passwordInput" placeholder="••••••••" required/>
+            <button type="button" class="password-toggle" id="passwordToggle">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="remember-row">
+          <div class="checkbox-group">
+            <input type="checkbox" id="rememberMe"/>
+            <label for="rememberMe">Remember me</label>
+          </div>
+          <a href="#" class="forgot-link" id="forgotPasswordLink">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="login-btn">
+          <i class="fas fa-sign-in-alt"></i> Sign In to FarmShield
+        </button>
+
+        <div class="divider">or continue with</div>
+
+        <div class="social-login">
+          <button type="button" class="social-btn" id="googleLogin">
+            <i class="fab fa-google"></i> Google
+          </button>
+          <button type="button" class="social-btn" id="microsoftLogin">
+            <i class="fab fa-microsoft"></i> Microsoft
+          </button>
+        </div>
+
+        <div class="register-link">
+          New to FarmShield? <a href="/signup">Create an account</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Background slideshow
+    const slides = document.querySelectorAll('.bg-slide');
+    let currentSlide = 0;
+    
+    function nextSlide() {
+      slides[currentSlide].classList.remove('active');
+      currentSlide = (currentSlide + 1) % slides.length;
+      slides[currentSlide].classList.add('active');
+    }
+    
+    setInterval(nextSlide, 5000);
+    
+    // Password toggle
+    const passwordInput = document.getElementById('passwordInput');
+    const passwordToggle = document.getElementById('passwordToggle');
+    const eyeIcon = passwordToggle.querySelector('i');
+    
+    passwordToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      eyeIcon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+    });
+    
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = themeToggle.querySelector('i');
+    
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      themeIcon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+      localStorage.setItem('farmshield_theme', newTheme);
+    });
+    
+    // Load saved theme
+    const savedTheme = localStorage.getItem('farmshield_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    themeIcon.className = savedTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+    
+    // Generate particles
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 50; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.top = `${Math.random() * 100}%`;
+      particle.style.animationDelay = `${Math.random() * 15}s`;
+      particle.style.width = `${Math.random() * 4 + 2}px`;
+      particle.style.height = particle.style.width;
+      particlesContainer.appendChild(particle);
+    }
+    
+    // Generate floating leaves
+    const leavesContainer = document.getElementById('floatingLeaves');
+    for (let i = 0; i < 12; i++) {
+      const leaf = document.createElement('div');
+      leaf.className = 'leaf';
+      leaf.innerHTML = '<i class="fas fa-leaf"></i>';
+      leaf.style.left = `${Math.random() * 100}%`;
+      leaf.style.animationDelay = `${Math.random() * 20}s`;
+      leaf.style.fontSize = `${Math.random() * 1.5 + 1}rem`;
+      leavesContainer.appendChild(leaf);
+    }
+    
+    // Form submission - FIXED
+    const loginForm = document.getElementById('loginForm');
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('passwordInput').value;
+      const remember = document.getElementById('rememberMe').checked;
+      
+      const loginBtn = loginForm.querySelector('.login-btn');
+      const originalText = loginBtn.innerHTML;
+      loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+      loginBtn.disabled = true;
+      
+      try {
+        const resp = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, remember })
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          window.location.href = '/home';
+        } else {
+          alert(data.error || 'Login failed');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Network error');
+      } finally {
+        loginBtn.innerHTML = originalText;
+        loginBtn.disabled = false;
+      }
+    });
+
+    // Logout function - for use in home.html and other pages
+    window.handleLogout = async function() {
+      if (confirm('Are you sure you want to logout?')) {
+        try {
+          const response = await fetch('/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
+          if (response.ok) {
+            // Clear session and redirect to login
+            window.location.href = '/login';
+          } else {
+            alert('Logout failed. Please try again.');
+          }
+        } catch (error) {
+          console.error('Logout error:', error);
+          alert('Network error during logout');
+        }
+      }
+    };
+
+    // Forgot Password - Navigate to forgot password page
+    document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.href = '/auth/forgot-password';
+    });
+
+    // Google Login - FIXED
+    document.getElementById('googleLogin').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('googleLogin');
+      const originalContent = btn.innerHTML;
+      
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+      
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        setTimeout(() => {
+          window.location.href = '/auth/google';
+        }, 1000);
+      } catch (error) {
+        console.error('Google OAuth error:', error);
+        alert('Failed to start Google authentication');
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+      }
+    });
+
+    // Microsoft Login - FIXED
+    document.getElementById('microsoftLogin').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('microsoftLogin');
+      const originalContent = btn.innerHTML;
+      
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+      
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        setTimeout(() => {
+          window.location.href = '/auth/microsoft';
+        }, 1000);
+      } catch (error) {
+        console.error('Microsoft OAuth error:', error);
+        alert('Failed to start Microsoft authentication');
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+      }
+    });
+  </script>
+</body>
+</html>

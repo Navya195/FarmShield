@@ -1,0 +1,336 @@
+{
+  "intents": [
+    {
+      "intent": "disease_identification",
+      "patterns": [
+        "what disease is this",
+        "identify disease",
+        "what's wrong with my crop",
+        "disease name",
+        "क्या बीमारी है",
+        "रोग की पहचान करें",
+        "మీ పంటకు ఏమి జరిగింది",
+        "என் பயிருக்கு என்ன நோய்"
+      ],
+      "responses": [
+        "Based on the image analysis, I can identify the disease and provide treatment recommendations.",
+        "Let me analyze the symptoms and identify the specific disease affecting your crop.",
+        "मैं आपकी फसल की बीमारी की पहचान करके उपचार बताऊंगा।"
+      ],
+      "context": ["disease_analysis"]
+    },
+    {
+      "intent": "leaf_yellowing",
+      "patterns": [
+        "yellow leaves",
+        "leaves turning yellow",
+        "yellowing",
+        "chlorosis",
+        "पत्ते पीले हो रहे हैं",
+        "पीली पत्तियां",
+        "ఆకులు పసుపు రంగులోకి మారుతున్నాయి",
+        "இலைகள் மஞ்சளாக மாறுகின்றன"
+      ],
+      "responses": [
+        "Yellow leaves can indicate: 1) Nitrogen deficiency - apply balanced fertilizer, 2) Overwatering - reduce irrigation, 3) Iron deficiency - use iron chelates, 4) Viral infection - remove affected plants.",
+        "पीली पत्तियों के कारण: 1) नाइट्रोजन की कमी - संतुलित खाद डालें, 2) अधिक पानी - सिंचाई कम करें, 3) आयरन की कमी - आयरन चिलेट का उपयोग करें।"
+      ],
+      "crops": ["tomato", "rice", "wheat", "corn", "apple", "potato"]
+    },
+    {
+      "intent": "fertilizer_recommendation",
+      "patterns": [
+        "best fertilizer",
+        "fertilizer for",
+        "what fertilizer",
+        "nutrient deficiency",
+        "खाद की सिफारिश",
+        "कौन सी खाद डालें",
+        "ఎరువు సిఫార్సు",
+        "உரம் பரிந்துரை"
+      ],
+      "responses": [
+        "For {crop}: NPK recommendations - Tomato: 10-10-10 with calcium, Rice: Urea + DAP, Wheat: 20-20-0, Corn: 12-12-17 with zinc.",
+        "{crop} के लिए खाद: टमाटर - NPK 10-10-10 + कैल्शियम, धान - यूरिया + DAP, गेहूं - NPK 20-20-0।"
+      ],
+      "crops": ["all"]
+    },
+    {
+      "intent": "disease_treatment",
+      "patterns": [
+        "how to treat",
+        "treatment for",
+        "cure disease",
+        "control disease",
+        "इलाज कैसे करें",
+        "बीमारी का उपचार",
+        "వ్యాధి చికిత్స",
+        "நோய் சிகிச்சை"
+      ],
+      "responses": [
+        "Treatment options: 1) Organic: {organic_treatment}, 2) Chemical: {chemical_treatment}, 3) Cultural practices: Remove infected parts, improve air circulation.",
+        "उपचार के विकल्प: 1) जैविक: {organic_treatment}, 2) रासायनिक: {chemical_treatment}, 3) संस्कृति: संक्रमित भागों को हटाएं।"
+      ],
+      "crops": ["all"]
+    },
+    {
+      "intent": "watering_schedule",
+      "patterns": [
+        "how often to water",
+        "watering schedule",
+        "irrigation",
+        "water requirements",
+        "पानी कब दें",
+        "सिंचाई का समय",
+        "నీటిపారుదల షెడ్యూల్",
+        "நீர்ப்பாசன அட்டவணை"
+      ],
+      "responses": [
+        "Watering schedule for {crop}: Tomato - 2-3 times weekly, Rice - continuous flooding, Wheat - 500-600mm per season, Corn - 1 inch weekly.",
+        "{crop} के लिए पानी: टमाटर - सप्ताह में 2-3 बार, धान - निरंतर जल भराव, गेहूं - मौसम में 500-600mm।"
+      ],
+      "crops": ["tomato", "rice", "wheat", "corn", "potato"]
+    },
+    {
+      "intent": "pest_control",
+      "patterns": [
+        "pest control",
+        "insects",
+        "bugs",
+        "aphids",
+        "caterpillars",
+        "कीट नियंत्रण",
+        "कीड़े मकोड़े",
+        "చీడపీడలు నియంత్రణ",
+        "பூச்சி கட்டுப்பாடு"
+      ],
+      "responses": [
+        "Pest control for {pest}: Aphids - neem oil spray, Caterpillars - Bacillus thuringiensis, Whiteflies - yellow sticky traps, Mites - sulfur dust.",
+        "कीट नियंत्रण: एफिड्स - नीम तेल स्प्रे, कैटरपिलर - बैसिलस थुरिंजिएंसिस, सफेद मक्खी - पीले चिपचिपे जाल।"
+      ],
+      "crops": ["all"]
+    },
+    {
+      "intent": "weather_advice",
+      "patterns": [
+        "weather forecast",
+        "rain prediction",
+        "temperature effect",
+        "humidity impact",
+        "मौसम की जानकारी",
+        "बारिश का पूर्वानुमान",
+        "వాతావరణ సలహా",
+        "வானிலை ஆலோசனை"
+      ],
+      "responses": [
+        "Weather-based advice: High humidity increases fungal disease risk. Apply preventive fungicides before monsoon. Avoid irrigation during rainy season.",
+        "मौसम आधारित सलाह: अधिक नमी से फंगल रोग का खतरा बढ़ता है। मानसून से पहले रोकथाम के लिए फफूंदनाशी डालें।"
+      ],
+      "crops": ["all"]
+    },
+    {
+      "intent": "organic_farming",
+      "patterns": [
+        "organic treatment",
+        "natural remedies",
+        "chemical free",
+        "bio pesticides",
+        "जैविक खेती",
+        "प्राकृतिक उपचार",
+        "సేంద్రీయ వ్యవసాయం",
+        "இயற்கை வேளாண்மை"
+      ],
+      "responses": [
+        "Organic solutions: Neem oil for pests, Trichoderma for soil health, Compost tea for nutrition, Copper sulfate for fungal diseases.",
+        "जैविक समाधान: कीटों के लिए नीम तेल, मिट्टी के स्वास्थ्य के लिए ट्राइकोडर्मा, पोषण के लिए कंपोस्ट चाय।"
+      ],
+      "crops": ["all"]
+    },
+    {
+      "intent": "crop_rotation",
+      "patterns": [
+        "crop rotation",
+        "next crop",
+        "what to plant next",
+        "फसल चक्र",
+        "अगली फसल",
+        "పంట మార్పిడి",
+        "பயிர் சுழற்சி"
+      ],
+      "responses": [
+        "Crop rotation benefits: After tomato - plant legumes (beans, peas), After rice - wheat or mustard, After corn - soybeans or groundnut.",
+        "फसल चक्र के फायदे: टमाटर के बाद - दलहन (बीन्स, मटर), धान के बाद - गेहूं या सरसों, मक्का के बाद - सोयाबीन।"
+      ],
+      "crops": ["all"]
+    },
+    {
+      "intent": "harvest_timing",
+      "patterns": [
+        "when to harvest",
+        "harvest time",
+        "maturity signs",
+        "कब काटें",
+        "फसल काटने का समय",
+        "కోత సమయం",
+        "அறுவடை நேரம்"
+      ],
+      "responses": [
+        "Harvest indicators for {crop}: Tomato - red color, firm texture; Rice - golden yellow grains; Wheat - hard grains, moisture 20-25%.",
+        "{crop} की कटाई के संकेत: टमाटर - लाल रंग, मजबूत बनावट; धान - सुनहरे पीले दाने; गेहूं - कठोर दाने, नमी 20-25%।"
+      ],
+      "crops": ["tomato", "rice", "wheat", "corn", "potato"]
+    }
+  ],
+  "crop_specific_knowledge": {
+    "tomato": {
+      "common_diseases": [
+        "Early Blight",
+        "Late Blight",
+        "Bacterial Spot",
+        "Leaf Mold",
+        "Septoria Leaf Spot"
+      ],
+      "fertilizer_schedule": {
+        "planting": "NPK 10-10-10",
+        "flowering": "High phosphorus",
+        "fruiting": "High potassium"
+      },
+      "watering": "2-3 times per week, deep watering",
+      "harvest_time": "75-85 days from transplant"
+    },
+    "rice": {
+      "common_diseases": [
+        "Blast",
+        "Brown Spot",
+        "Sheath Blight",
+        "Bacterial Leaf Blight"
+      ],
+      "fertilizer_schedule": {
+        "basal": "DAP + Potash",
+        "tillering": "Urea",
+        "panicle": "Urea + Potash"
+      },
+      "watering": "Continuous flooding 2-5 cm",
+      "harvest_time": "110-130 days from sowing"
+    },
+    "wheat": {
+      "common_diseases": [
+        "Rust",
+        "Smut",
+        "Bunt",
+        "Powdery Mildew"
+      ],
+      "fertilizer_schedule": {
+        "sowing": "NPK 20-20-0",
+        "crown_root": "Urea",
+        "grain_filling": "Urea"
+      },
+      "watering": "4-6 irrigations total",
+      "harvest_time": "110-120 days from sowing"
+    },
+    "corn": {
+      "common_diseases": [
+        "Gray Leaf Spot",
+        "Common Rust",
+        "Northern Leaf Blight",
+        "Ear Rot"
+      ],
+      "fertilizer_schedule": {
+        "planting": "NPK 12-12-17",
+        "v6_stage": "Nitrogen side dress",
+        "tasseling": "Potassium boost"
+      },
+      "watering": "1 inch per week",
+      "harvest_time": "90-120 days from planting"
+    },
+    "potato": {
+      "common_diseases": [
+        "Late Blight",
+        "Early Blight",
+        "Scab",
+        "Black Scurf"
+      ],
+      "fertilizer_schedule": {
+        "planting": "NPK 10-26-26",
+        "hilling": "Nitrogen top dress",
+        "tuber_formation": "Potassium rich"
+      },
+      "watering": "Regular, avoid waterlogging",
+      "harvest_time": "70-120 days from planting"
+    }
+  },
+  "regional_translations": {
+    "hindi": {
+      "disease": "रोग",
+      "treatment": "उपचार",
+      "fertilizer": "खाद",
+      "watering": "सिंचाई",
+      "harvest": "फसल",
+      "symptoms": "लक्षण",
+      "prevention": "रोकथाम",
+      "organic": "जैविक",
+      "chemical": "रासायनिक"
+    },
+    "telugu": {
+      "disease": "వ్యాధి",
+      "treatment": "చికిత్స",
+      "fertilizer": "ఎరువు",
+      "watering": "నీటిపారుదల",
+      "harvest": "పంట",
+      "symptoms": "లక్షణాలు",
+      "prevention": "నివారణ",
+      "organic": "సేంద్రీయ",
+      "chemical": "రసాయన"
+    },
+    "tamil": {
+      "disease": "நோய்",
+      "treatment": "சிகிச்சை",
+      "fertilizer": "உரம்",
+      "watering": "நீர்ப்பாசனம்",
+      "harvest": "அறுவடை",
+      "symptoms": "அறிகுறிகள்",
+      "prevention": "தடுப்பு",
+      "organic": "இயற்கை",
+      "chemical": "இரசாயன"
+    },
+    "marathi": {
+      "disease": "रोग",
+      "treatment": "उपचार",
+      "fertilizer": "खत",
+      "watering": "पाणी",
+      "harvest": "कापणी",
+      "symptoms": "लक्षणे",
+      "prevention": "प्रतिबंध",
+      "organic": "सेंद्रिय",
+      "chemical": "रासायनिक"
+    }
+  },
+  "emergency_contacts": {
+    "kvk_helpline": "1800-180-1551",
+    "agriculture_dept": "1551",
+    "expert_helpline": "1800-11-1363",
+    "kisan_call_center": "1800-180-1551"
+  },
+  "weather_disease_correlation": {
+    "high_humidity": [
+      "Late Blight",
+      "Downy Mildew",
+      "Bacterial Diseases"
+    ],
+    "high_temperature": [
+      "Viral Diseases",
+      "Bacterial Wilt",
+      "Heat Stress"
+    ],
+    "rainy_season": [
+      "Fungal Diseases",
+      "Root Rot",
+      "Leaf Spot"
+    ],
+    "dry_conditions": [
+      "Spider Mites",
+      "Thrips",
+      "Powdery Mildew"
+    ]
+  }
+}

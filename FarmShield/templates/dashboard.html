@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FarmShield Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Poppins', sans-serif; background: var(--bg, #0f172a); color: var(--text, #f1f5f9); }
+
+    /* Shell */
+    .db-shell { display: flex; padding-top: 70px; min-height: 100vh; }
+
+    /* ═══ SIDEBAR ═══ */
+    .db-sidebar {
+      width: 260px; min-width: 260px;
+      background: var(--bg-card, #1e293b);
+      border-right: 1px solid var(--border, rgba(255,255,255,0.08));
+      position: fixed; top: 70px; left: 0; bottom: 0;
+      overflow-y: auto; overflow-x: hidden;
+      z-index: 200; display: flex; flex-direction: column;
+      transition: transform 0.3s ease;
+      scrollbar-width: thin; scrollbar-color: rgba(34,197,94,0.3) transparent;
+    }
+    .db-sidebar::-webkit-scrollbar { width: 4px; }
+    .db-sidebar::-webkit-scrollbar-thumb { background: rgba(34,197,94,0.3); border-radius: 4px; }
+
+    .sidebar-header { padding: 20px 20px 12px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.08)); }
+    .sidebar-title { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted, #64748b); }
+
+    .sidebar-group { padding: 8px 0; }
+    .sidebar-group-label { padding: 8px 20px 4px; font-size: 0.63rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted, #64748b); opacity: 0.7; }
+    .sidebar-list { list-style: none; padding: 0; }
+    .sidebar-item { padding: 0 10px; margin-bottom: 2px; }
+
+    .sb-btn {
+      display: flex; align-items: center; gap: 11px;
+      padding: 9px 13px; border-radius: 10px;
+      font-size: 0.85rem; font-weight: 500;
+      color: var(--text-muted, #94a3b8);
+      cursor: pointer; width: 100%; border: none; background: transparent;
+      transition: background 0.2s, color 0.2s, transform 0.15s;
+      white-space: nowrap; text-align: left;
+    }
+    .sb-btn:hover { background: rgba(34,197,94,0.08); color: #22c55e; transform: translateX(3px); }
+    .sb-btn.active { background: rgba(34,197,94,0.14); color: #22c55e; font-weight: 600; }
+    .sb-icon {
+      width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; background: rgba(255,255,255,0.05); font-size: 0.8rem; flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .sb-btn:hover .sb-icon, .sb-btn.active .sb-icon { background: rgba(34,197,94,0.14); }
+    .sidebar-divider { height: 1px; background: var(--border, rgba(255,255,255,0.07)); margin: 5px 16px; }
+
+    /* Mobile */
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 199; }
+    .sidebar-overlay.open { display: block; }
+    .mob-toggle { display: none; position: fixed; top: 76px; left: 12px; z-index: 210; background: #22c55e; color: #fff; border: none; border-radius: 8px; width: 36px; height: 36px; font-size: 0.9rem; cursor: pointer; align-items: center; justify-content: center; }
+
+    /* ═══ MAIN ═══ */
+    .db-main { flex: 1; margin-left: 260px; padding: 28px 32px; transition: margin-left 0.3s; }
+
+    /* Panels */
+    .content-panel { display: none; animation: panelIn 0.35s ease; }
+    .content-panel.active { display: block; }
+    @keyframes panelIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+    /* Heading */
+    .section-heading { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+    .heading-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(34,197,94,0.14); color: #22c55e; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+    .section-heading h2 { font-size: 1.5rem; font-weight: 800; color: var(--text, #f1f5f9); }
+    .section-heading p { font-size: 0.83rem; color: var(--text-muted, #64748b); margin-top: 2px; }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-card, #1e293b); border: 1px solid var(--border, rgba(255,255,255,0.08)); border-radius: 16px; padding: 22px; display: flex; align-items: center; gap: 16px; transition: transform 0.2s, box-shadow 0.2s; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(34,197,94,0.1); }
+    .stat-icon { width: 50px; height: 50px; border-radius: 13px; background: rgba(34,197,94,0.12); color: #22c55e; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .stat-content h3 { font-size: 1.55rem; font-weight: 800; color: var(--text, #f1f5f9); line-height: 1.1; }
+    .stat-content p { font-size: 0.78rem; color: var(--text-muted, #64748b); margin-top: 2px; }
+    .stat-trend { font-size: 0.73rem; font-weight: 600; display: inline-block; margin-top: 4px; }
+    .stat-trend.up { color: #22c55e; } .stat-trend.stable { color: #f59e0b; }
+
+    /* Charts */
+    .charts-section { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px; }
+    .chart-card { background: var(--bg-card, #1e293b); border: 1px solid var(--border, rgba(255,255,255,0.08)); border-radius: 16px; padding: 22px; }
+    .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .chart-header h3 { font-size: 0.95rem; font-weight: 700; color: var(--text, #f1f5f9); display: flex; align-items: center; gap: 8px; }
+    .chart-header h3 i { color: #22c55e; }
+    .chart-header select, .refresh-btn { background: rgba(255,255,255,0.07); border: 1px solid var(--border, rgba(255,255,255,0.1)); border-radius: 8px; color: var(--text-muted, #94a3b8); padding: 5px 10px; font-size: 0.78rem; cursor: pointer; font-family: inherit; }
+    .refresh-btn { padding: 6px 10px; transition: transform 0.5s; border: none; }
+    .refresh-btn:hover { transform: rotate(180deg); }
+    .disease-item { margin-bottom: 10px; }
+    .disease-bar { background: linear-gradient(90deg,rgba(34,197,94,0.18),rgba(34,197,94,0.06)); border-left: 3px solid #22c55e; border-radius: 6px; padding: 8px 12px; display: flex; justify-content: space-between; font-size: 0.83rem; }
+    .disease-name { font-weight: 600; color: var(--text, #f1f5f9); } .disease-count { font-weight: 700; color: #22c55e; }
+    .health-score-display { display: flex; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
+    .health-circle { width: 88px; height: 88px; border-radius: 50%; background: conic-gradient(#22c55e 280deg, rgba(255,255,255,0.07) 0deg); display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+    .health-value { font-size: 1.35rem; font-weight: 800; color: #22c55e; line-height: 1; }
+    .health-label { font-size: 0.52rem; color: var(--text-muted, #64748b); text-align: center; }
+    .health-breakdown { flex: 1; min-width: 150px; }
+    .health-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .health-crop { width: 50px; font-size: 0.78rem; font-weight: 600; color: var(--text, #f1f5f9); }
+    .health-bar { flex: 1; height: 7px; background: rgba(255,255,255,0.07); border-radius: 4px; overflow: hidden; }
+    .health-fill { height: 100%; border-radius: 4px; }
+    .health-percent { font-size: 0.78rem; font-weight: 700; color: var(--text-muted, #94a3b8); min-width: 34px; text-align: right; }
+
+    /* Activity */
+    .activity-section { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .activity-card, .alerts-card { background: var(--bg-card, #1e293b); border: 1px solid var(--border, rgba(255,255,255,0.08)); border-radius: 16px; padding: 22px; }
+    .activity-header, .alerts-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .activity-header h3, .alerts-header h3 { font-size: 0.95rem; font-weight: 700; color: var(--text, #f1f5f9); display: flex; align-items: center; gap: 8px; }
+    .activity-header h3 i, .alerts-header h3 i { color: #22c55e; }
+    .view-all { font-size: 0.78rem; color: #22c55e; text-decoration: none; font-weight: 600; }
+    .alert-count { background: #ef4444; color: #fff; border-radius: 20px; padding: 2px 8px; font-size: 0.73rem; font-weight: 700; }
+    .activity-item { display: flex; align-items: flex-start; gap: 11px; padding: 11px 0; border-bottom: 1px solid var(--border, rgba(255,255,255,0.06)); }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+    .activity-icon.disease-severe { background: rgba(239,68,68,0.14); color: #ef4444; }
+    .activity-icon.disease-moderate { background: rgba(245,158,11,0.14); color: #f59e0b; }
+    .activity-icon.disease-healthy { background: rgba(34,197,94,0.14); color: #22c55e; }
+    .activity-content h4 { font-size: 0.85rem; font-weight: 700; color: var(--text, #f1f5f9); }
+    .activity-content p { font-size: 0.73rem; color: var(--text-muted, #64748b); margin-top: 2px; }
+    .activity-time { font-size: 0.68rem; color: var(--text-muted, #64748b); }
+    .activity-status { font-size: 0.68rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; margin-left: auto; white-space: nowrap; align-self: center; }
+    .activity-status.severe { background: rgba(239,68,68,0.14); color: #ef4444; }
+    .activity-status.moderate { background: rgba(245,158,11,0.14); color: #f59e0b; }
+    .activity-status.healthy { background: rgba(34,197,94,0.14); color: #22c55e; }
+    .alert-item { display: flex; align-items: flex-start; gap: 11px; padding: 11px 0; border-bottom: 1px solid var(--border, rgba(255,255,255,0.06)); }
+    .alert-item:last-child { border-bottom: none; }
+    .alert-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+    .alert-item.critical .alert-icon { background: rgba(239,68,68,0.14); color: #ef4444; }
+    .alert-item.warning .alert-icon { background: rgba(245,158,11,0.14); color: #f59e0b; }
+    .alert-item.info .alert-icon { background: rgba(59,130,246,0.14); color: #3b82f6; }
+    .alert-content h4 { font-size: 0.83rem; font-weight: 700; color: var(--text, #f1f5f9); }
+    .alert-content p { font-size: 0.73rem; color: var(--text-muted, #64748b); margin-top: 2px; }
+    .alert-time { font-size: 0.68rem; color: var(--text-muted, #64748b); }
+
+    /* Feature grid */
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 22px; }
+    .feature-card { background: var(--bg-card, #1e293b); border: 1px solid var(--border, rgba(255,255,255,0.08)); border-radius: 16px; padding: 20px; transition: transform 0.2s, box-shadow 0.2s; }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(34,197,94,0.1); }
+    .fc-icon { width: 46px; height: 46px; border-radius: 12px; background: rgba(34,197,94,0.14); color: #22c55e; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 12px; }
+    .feature-card h3 { font-size: 0.95rem; font-weight: 700; color: var(--text, #f1f5f9); margin-bottom: 6px; }
+    .feature-card p { font-size: 0.8rem; color: var(--text-muted, #64748b); line-height: 1.5; }
+    .fc-btn { margin-top: 13px; display: inline-flex; align-items: center; gap: 7px; padding: 9px 17px; background: linear-gradient(135deg,#22c55e,#16a34a); color: #fff; border: none; border-radius: 10px; font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.2s, transform 0.2s; }
+    .fc-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* Expert card */
+    .expert-card { background: var(--bg-card, #1e293b); border: 1px solid var(--border, rgba(255,255,255,0.08)); border-radius: 16px; padding: 20px; position: relative; }
+    .expert-status-dot { position: absolute; top: 17px; right: 17px; width: 10px; height: 10px; border-radius: 50%; }
+    .expert-status-dot.online { background: #22c55e; box-shadow: 0 0 5px #22c55e; }
+    .expert-status-dot.offline { background: #64748b; }
+    .expert-card h3 { font-size: 0.93rem; font-weight: 700; color: var(--text, #f1f5f9); margin-bottom: 3px; }
+    .expert-role { font-size: 0.78rem; color: #22c55e; font-weight: 600; margin-bottom: 10px; }
+    .expert-meta { font-size: 0.76rem; color: var(--text-muted, #64748b); line-height: 1.6; }
+    .expert-rating { color: #f59e0b; font-weight: 700; }
+
+    /* FAQ */
+    .faq-item { background: var(--bg-card, #1e293b); border: 1px solid var(--border, rgba(255,255,255,0.08)); border-radius: 12px; margin-bottom: 9px; overflow: hidden; }
+    .faq-q { padding: 14px 17px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 0.875rem; color: var(--text, #f1f5f9); transition: background 0.2s; }
+    .faq-q:hover { background: rgba(34,197,94,0.06); }
+    .faq-q i { color: #22c55e; transition: transform 0.25s; flex-shrink: 0; margin-left: 12px; }
+    .faq-a { display: none; padding: 0 17px 14px; font-size: 0.83rem; color: var(--text-muted, #94a3b8); line-height: 1.6; }
+    .faq-item.open .faq-a { display: block; }
+    .faq-item.open .faq-q i { transform: rotate(180deg); }
+
+    /* Severity */
+    .severity-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 22px; }
+    .severity-card { border-radius: 14px; padding: 20px; text-align: center; border: 2px solid transparent; }
+    .severity-card .sev-icon { font-size: 1.9rem; margin-bottom: 10px; }
+    .severity-card h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+    .severity-card p { font-size: 0.78rem; line-height: 1.5; color: var(--text-muted, #94a3b8); }
+    .severity-card.green { background: rgba(34,197,94,0.09); border-color: #22c55e; }
+    .severity-card.green h3 { color: #22c55e; }
+    .severity-card.yellow { background: rgba(234,179,8,0.09); border-color: #eab308; }
+    .severity-card.yellow h3 { color: #eab308; }
+    .severity-card.orange { background: rgba(249,115,22,0.09); border-color: #f97316; }
+    .severity-card.orange h3 { color: #f97316; }
+    .severity-card.red { background: rgba(239,68,68,0.09); border-color: #ef4444; }
+    .severity-card.red h3 { color: #ef4444; }
+
+    /* Language pills */
+    .lang-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+    .lang-pill { display: flex; align-items: center; gap: 7px; padding: 9px 16px; background: var(--bg-card, #1e293b); border: 1px solid var(--border, rgba(255,255,255,0.1)); border-radius: 50px; font-size: 0.83rem; font-weight: 600; color: var(--text, #f1f5f9); cursor: pointer; transition: all 0.2s; }
+    .lang-pill:hover, .lang-pill.active { border-color: #22c55e; background: rgba(34,197,94,0.11); color: #22c55e; }
+
+    /* Settings */
+    .settings-group { margin-bottom: 24px; }
+    .settings-group h3 { font-size: 0.9rem; font-weight: 700; color: var(--text, #f1f5f9); margin-bottom: 12px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.08)); padding-bottom: 8px; }
+    .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border, rgba(255,255,255,0.05)); }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-label h4 { font-size: 0.85rem; font-weight: 600; color: var(--text, #f1f5f9); }
+    .settings-label p { font-size: 0.73rem; color: var(--text-muted, #64748b); }
+    .toggle-switch { position: relative; width: 44px; height: 23px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: rgba(255,255,255,0.1); border-radius: 23px; cursor: pointer; transition: 0.3s; }
+    .toggle-slider::before { content: ''; position: absolute; height: 17px; width: 17px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+    .toggle-switch input:checked + .toggle-slider { background: #22c55e; }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(21px); }
+
+    /* Support */
+    .support-card { display: flex; align-items: center; gap: 15px; background: var(--bg-card, #1e293b); border: 1px solid var(--border, rgba(255,255,255,0.08)); border-radius: 14px; padding: 16px 20px; margin-bottom: 11px; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
+    .support-card:hover { transform: translateX(4px); border-color: #22c55e; }
+    .support-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .support-info h3 { font-size: 0.88rem; font-weight: 700; color: var(--text, #f1f5f9); }
+    .support-info p { font-size: 0.75rem; color: var(--text-muted, #64748b); }
+    .support-number { margin-left: auto; font-size: 0.83rem; font-weight: 700; color: #22c55e; white-space: nowrap; }
+
+    /* Info box */
+    .info-box { background: var(--bg-card, #1e293b); border: 1px solid var(--border, rgba(255,255,255,0.08)); border-left: 4px solid #22c55e; border-radius: 12px; padding: 16px 20px; margin-bottom: 14px; }
+    .info-box h4 { font-size: 0.88rem; font-weight: 700; color: var(--text, #f1f5f9); margin-bottom: 5px; }
+    .info-box p { font-size: 0.8rem; color: var(--text-muted, #94a3b8); line-height: 1.5; }
+
+    /* Scan */
+    .scan-area { border: 2px dashed rgba(34,197,94,0.35); border-radius: 16px; padding: 44px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; margin-bottom: 20px; }
+    .scan-area:hover { border-color: #22c55e; background: rgba(34,197,94,0.04); }
+    .scan-area i { font-size: 2.8rem; color: #22c55e; margin-bottom: 13px; display: block; }
+    .scan-area h3 { font-size: 1.05rem; font-weight: 700; color: var(--text, #f1f5f9); margin-bottom: 7px; }
+    .scan-area p { font-size: 0.82rem; color: var(--text-muted, #64748b); }
+
+    /* Voice */
+    .voice-circle { width: 114px; height: 114px; border-radius: 50%; background: rgba(34,197,94,0.1); border: 3px solid rgba(34,197,94,0.3); display: flex; align-items: center; justify-content: center; font-size: 2.4rem; color: #22c55e; margin: 0 auto 18px; cursor: pointer; transition: all 0.3s; }
+    .voice-circle:hover, .voice-circle.listening { background: rgba(34,197,94,0.18); border-color: #22c55e; box-shadow: 0 0 28px rgba(34,197,94,0.4); }
+    .voice-circle.listening { animation: vcPulse 1s infinite; }
+    @keyframes vcPulse { 0%,100%{box-shadow:0 0 18px rgba(34,197,94,0.3);}50%{box-shadow:0 0 36px rgba(34,197,94,0.6);} }
+
+    /* Community */
+    .community-post { background: var(--bg-card, #1e293b); border: 1px solid var(--border, rgba(255,255,255,0.08)); border-radius: 14px; padding: 18px; margin-bottom: 13px; }
+    .post-header { display: flex; justify-content: space-between; margin-bottom: 9px; }
+    .post-author h4 { font-size: 0.88rem; font-weight: 700; color: var(--text, #f1f5f9); }
+    .post-author p { font-size: 0.73rem; color: var(--text-muted, #64748b); }
+    .post-time { font-size: 0.73rem; color: var(--text-muted, #64748b); }
+    .post-body { font-size: 0.83rem; color: var(--text, #f1f5f9); line-height: 1.6; margin-bottom: 11px; }
+    .post-actions { display: flex; gap: 14px; }
+    .post-action-btn { display: flex; align-items: center; gap: 5px; font-size: 0.78rem; color: var(--text-muted, #64748b); cursor: pointer; border: none; background: transparent; font-family: inherit; transition: color 0.2s; }
+    .post-action-btn:hover { color: #22c55e; }
+    .post-form { background: var(--bg-card, #1e293b); border: 1px solid var(--border, rgba(255,255,255,0.08)); border-radius: 14px; padding: 18px; margin-bottom: 18px; }
+    .post-form textarea { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border, rgba(255,255,255,0.1)); border-radius: 9px; padding: 11px; color: var(--text, #f1f5f9); font-family: inherit; font-size: 0.85rem; resize: vertical; min-height: 75px; margin-bottom: 9px; }
+    .post-form textarea:focus { outline: none; border-color: #22c55e; }
+
+    /* Guide steps */
+    .guide-step { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--border, rgba(255,255,255,0.06)); }
+    .guide-step:last-child { border-bottom: none; }
+    .step-num { width: 34px; height: 34px; border-radius: 50%; background: rgba(34,197,94,0.14); color: #22c55e; display: flex; align-items: center; justify-content: center; font-size: 0.83rem; font-weight: 800; flex-shrink: 0; }
+    .step-content h4 { font-size: 0.88rem; font-weight: 700; color: var(--text, #f1f5f9); margin-bottom: 4px; }
+    .step-content p { font-size: 0.8rem; color: var(--text-muted, #64748b); line-height: 1.5; }
+
+    /* Responsive */
+    @media(max-width:900px){ .charts-section { grid-template-columns: 1fr; } .activity-section { grid-template-columns: 1fr; } }
+    @media(max-width:768px){
+      .db-sidebar { transform: translateX(-100%); }
+      .db-sidebar.open { transform: translateX(0); }
+      .db-main { margin-left: 0; padding: 20px 16px; }
+      .mob-toggle { display: flex; }
+    }
+    @media(max-width:480px){ .stats-grid { grid-template-columns: 1fr 1fr; } }
+    @media(max-width:360px){ .stats-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">
+      <img src="{{ url_for('static', filename='images/farmshield-exact-logo.png') }}" alt="FarmShield" class="logo-image" style="width:60px;height:60px;object-fit:contain;">
+      <span>Farm<strong>Shield</strong></span>
+    </div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="/" class="nav-link"><i class="fas fa-home"></i> Home</a></li>
+      <li><a href="/dashboard" class="nav-link active"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+      {% if session.get('user') %}
+        <li><a href="#" onclick="handleLogout()" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+      {% else %}
+        <li><a href="/login" class="nav-link"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+      {% endif %}
+    </ul>
+    <div class="nav-actions">
+      <button class="theme-toggle" id="themeToggle" title="Toggle Theme"><i class="fas fa-moon"></i></button>
+    </div>
+  </nav>
+
+  <!-- Mobile hamburger -->
+  <button class="mob-toggle" id="mobToggle" title="Open Menu"><i class="fas fa-bars"></i></button>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="db-shell">
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="db-sidebar" id="dbSidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">FarmShield Menu</div>
+      </div>
+
+      <!-- Overview -->
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">Overview</div>
+        <ul class="sidebar-list">
+          <li class="sidebar-item">
+            <button class="sb-btn active" onclick="showPanel('overview',this)">
+              <span class="sb-icon"><i class="fas fa-chart-line"></i></span><span>Dashboard</span>
+            </button>
+          </li>
+          <li class="sidebar-item">
+            <button class="sb-btn" onclick="showPanel('scan',this)">
+              <span class="sb-icon"><i class="fas fa-camera"></i></span><span>One&#8209;Tap Scan</span>
+            </button>
+          </li>
+          <li class="sidebar-item">
+            <button class="sb-btn" onclick="showPanel('voice',this)">
+              <span class="sb-icon"><i class="fas fa-microphone"></i></span><span>Voice Diagnosis</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Community -->
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">Community</div>
+        <ul class="sidebar-list">
+          <li class="sidebar-item">
+            <button class="sb-btn" onclick="showPanel('community',this)">
+              <span class="sb-icon"><i class="fas fa-users"></i></span><span>Community</span>
+            </button>
+          </li>
+          <li class="sidebar-item">
+            <button class="sb-btn" onclick="showPanel('experts',this)">
+              <span class="sb-icon"><i class="fas fa-user-md"></i></span><span>Experts</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Features -->
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">Features</div>
+        <ul class="sidebar-list">
+          <li class="sidebar-item">
+            <button class="sb-btn" onclick="showPanel('offline',this)">
+              <span class="sb-icon"><i class="fas fa-wifi-slash"></i></span><span>Offline Mode</span>
+            </button>
+          </li>
+          <li class="sidebar-item">
+            <button class="sb-btn" onclick="showPanel('languages',this)">
+              <span class="sb-icon"><i class="fas fa-language"></i></span><span>Regional Languages</span>
+            </button>
+          </li>
+          <li class="sidebar-item">
+            <button class="sb-btn" onclick="showPanel('severity',this)">
+              <span class="sb-icon"><i class="fas fa-traffic-light"></i></span><span>Disease Severity</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Help & Settings -->
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">Help &amp; Settings</div>
+        <ul class="sidebar-list">
+          <li class="sidebar-item">
+            <button class="sb-btn" onclick="showPanel('faq',this)">
+              <span class="sb-icon"><i class="fas fa-question-circle"></i></span><span>FAQ</span>
+            </button>
+          </li>
+          <li class="sidebar-item">
+            <button class="sb-btn" onclick="showPanel('guide',this)">
+              <span class="sb-icon"><i class="fas fa-book"></i></span><span>User Guide</span>
+            </button>
+          </li>
+          <li class="sidebar-item">
+            <button class="sb-btn" onclick="showPanel('settings',this)">
+              <span class="sb-icon"><i class="fas fa-cog"></i></span><span>Settings</span>
+            </button>
+          </li>
+          <li class="sidebar-item">
+            <button class="sb-btn" onclick="showPanel('support',this)">
+              <span class="sb-icon"><i class="fas fa-headset"></i></span><span>Support / Helpline</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+      <div style="height:18px;"></div>
+    </aside>
+
+    <!-- ═══ MAIN ═══ -->
+    <main class="db-main" id="dbMain">
+
+      <!-- OVERVIEW -->
+      <div id="panel-overview" class="content-panel active">
+        <div class="section-heading">
+          <div class="heading-icon"><i class="fas fa-chart-line"></i></div>
+          <div><h2>AI Dashboard</h2><p>Real-time agricultural intelligence and analytics</p></div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon"><i class="fas fa-microscope"></i></div><div class="stat-content"><h3>1,247</h3><p>Total Scans</p><span class="stat-trend up">&#8593; 12%</span></div></div>
+          <div class="stat-card"><div class="stat-icon"><i class="fas fa-bullseye"></i></div><div class="stat-content"><h3>96.8%</h3><p>AI Accuracy</p><span class="stat-trend up">&#8593; 2.1%</span></div></div>
+          <div class="stat-card"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-content"><h3>50,000+</h3><p>Farmers Helped</p><span class="stat-trend up">&#8593; 8.5%</span></div></div>
+          <div class="stat-card"><div class="stat-icon"><i class="fas fa-virus"></i></div><div class="stat-content"><h3>38</h3><p>Diseases Detected</p><span class="stat-trend stable">&#8594; Stable</span></div></div>
+        </div>
+        <div class="charts-section">
+          <div class="chart-card">
+            <div class="chart-header"><h3><i class="fas fa-chart-bar"></i> Disease Distribution</h3><select><option>Last 7 days</option><option>Last 30 days</option><option>Last 90 days</option></select></div>
+            <div class="disease-item"><div class="disease-bar"><span class="disease-name">Early Blight</span><span class="disease-count">342</span></div></div>
+            <div class="disease-item"><div class="disease-bar" style="width:83%"><span class="disease-name">Late Blight</span><span class="disease-count">287</span></div></div>
+            <div class="disease-item"><div class="disease-bar" style="width:58%"><span class="disease-name">Gray Leaf Spot</span><span class="disease-count">198</span></div></div>
+            <div class="disease-item"><div class="disease-bar" style="width:46%"><span class="disease-name">Apple Scab</span><span class="disease-count">156</span></div></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header"><h3><i class="fas fa-seedling"></i> Crop Health Score</h3><button class="refresh-btn" onclick="doRefresh(event)"><i class="fas fa-sync-alt"></i></button></div>
+            <div class="health-score-display">
+              <div class="health-circle"><div class="health-value">78</div><div class="health-label">Overall</div></div>
+              <div class="health-breakdown">
+                <div class="health-item"><span class="health-crop">Tomato</span><div class="health-bar"><div class="health-fill" style="width:85%;background:#22c55e;"></div></div><span class="health-percent">85%</span></div>
+                <div class="health-item"><span class="health-crop">Rice</span><div class="health-bar"><div class="health-fill" style="width:72%;background:#f59e0b;"></div></div><span class="health-percent">72%</span></div>
+                <div class="health-item"><span class="health-crop">Wheat</span><div class="health-bar"><div class="health-fill" style="width:90%;background:#22c55e;"></div></div><span class="health-percent">90%</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="activity-section">
+          <div class="activity-card">
+            <div class="activity-header"><h3><i class="fas fa-history"></i> Recent Diagnoses</h3><a href="#" class="view-all">View All</a></div>
+            <div class="activity-item"><div class="activity-icon disease-severe"><i class="fas fa-virus"></i></div><div class="activity-content"><h4>Tomato Early Blight</h4><p>Farmer: Rajesh Kumar &bull; Punjab</p><span class="activity-time">2 minutes ago</span></div><div class="activity-status severe">Severe</div></div>
+            <div class="activity-item"><div class="activity-icon disease-moderate"><i class="fas fa-leaf"></i></div><div class="activity-content"><h4>Rice Blast Identified</h4><p>Farmer: Priya Sharma &bull; Haryana</p><span class="activity-time">15 minutes ago</span></div><div class="activity-status moderate">Moderate</div></div>
+            <div class="activity-item"><div class="activity-icon disease-healthy"><i class="fas fa-check-circle"></i></div><div class="activity-content"><h4>Healthy Wheat Crop</h4><p>Farmer: Amit Singh &bull; Uttar Pradesh</p><span class="activity-time">32 minutes ago</span></div><div class="activity-status healthy">Healthy</div></div>
+          </div>
+          <div class="alerts-card">
+            <div class="alerts-header"><h3><i class="fas fa-exclamation-triangle"></i> Active Alerts</h3><span class="alert-count">3</span></div>
+            <div class="alert-item critical"><div class="alert-icon"><i class="fas fa-bell"></i></div><div class="alert-content"><h4>Disease Outbreak Warning</h4><p>Late blight spreading in Maharashtra</p><span class="alert-time">1 hour ago</span></div></div>
+            <div class="alert-item warning"><div class="alert-icon"><i class="fas fa-cloud-rain"></i></div><div class="alert-content"><h4>Weather Alert</h4><p>Heavy rainfall &ndash; fungal risk high</p><span class="alert-time">3 hours ago</span></div></div>
+            <div class="alert-item info"><div class="alert-icon"><i class="fas fa-info-circle"></i></div><div class="alert-content"><h4>System Update</h4><p>New disease detection model deployed</p><span class="alert-time">1 day ago</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ONE-TAP SCAN -->
+      <div id="panel-scan" class="content-panel">
+        <div class="section-heading"><div class="heading-icon"><i class="fas fa-camera"></i></div><div><h2>One&#8209;Tap Scan</h2><p>Upload or capture a leaf image for instant AI diagnosis</p></div></div>
+        <!-- Camera section -->
+        <div id="cameraSection" style="margin-bottom:20px;">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+            <button class="fc-btn" id="openCamBtn" onclick="openDashCamera()"><i class="fas fa-camera"></i> Open Camera</button>
+            <button class="fc-btn" style="background:linear-gradient(135deg,#3b82f6,#2563eb);" onclick="document.getElementById('dashFile').click()"><i class="fas fa-upload"></i> Upload Image</button>
+          </div>
+          <!-- Camera stream (hidden by default) -->
+          <div id="camContainer" style="display:none;position:relative;border-radius:16px;overflow:hidden;background:#000;margin-bottom:12px;">
+            <video id="camVideo" autoplay playsinline style="width:100%;max-height:380px;display:block;object-fit:cover;"></video>
+            <div style="display:flex;gap:10px;justify-content:center;padding:12px;background:rgba(0,0,0,0.6);">
+              <button class="fc-btn" id="snapBtn" onclick="snapDashPhoto()" style="gap:8px;"><i class="fas fa-circle" style="color:#ef4444;"></i> Capture</button>
+              <button class="fc-btn" onclick="closeDashCamera()" style="background:linear-gradient(135deg,#64748b,#475569);"><i class="fas fa-times"></i> Close</button>
+            </div>
+          </div>
+          <!-- Permission denied message -->
+          <div id="camDenied" style="display:none;" class="info-box" style="border-left-color:#ef4444;">
+            <h4><i class="fas fa-exclamation-circle" style="color:#ef4444;margin-right:7px;"></i>Camera Permission Denied</h4>
+            <p>Please allow camera access in your browser settings, then try again.</p>
+            <button class="fc-btn" style="margin-top:10px;" onclick="retryDashCamera()"><i class="fas fa-redo"></i> Retry Camera</button>
+          </div>
+        </div>
+        <!-- Upload fallback -->
+        <div class="scan-area" onclick="document.getElementById('dashFile').click()">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <h3>Or Drop / Click to Upload</h3>
+          <p>JPG, PNG, WebP or BMP &bull; Max 15 MB</p>
+        </div>
+        <input type="file" id="dashFile" accept="image/*" hidden onchange="handleDashFile(event)">
+        <!-- Canvas for snapshot (hidden) -->
+        <canvas id="snapCanvas" style="display:none;"></canvas>
+        <div id="dashScanResult"></div>
+      </div>
+
+      <!-- VOICE DIAGNOSIS -->
+      <div id="panel-voice" class="content-panel">
+        <div class="section-heading"><div class="heading-icon"><i class="fas fa-microphone"></i></div><div><h2>Voice Diagnosis</h2><p>Describe symptoms verbally in your regional language</p></div></div>
+
+        <!-- Language selection -->
+        <div class="chart-card" style="margin-bottom:22px;">
+          <div class="chart-header" style="margin-bottom:14px;"><h3><i class="fas fa-language"></i> Select Your Language</h3><span id="voiceLangDisplay" style="font-size:0.82rem;color:#22c55e;font-weight:700;">English</span></div>
+          <div class="lang-grid" id="voiceLangGrid">
+            <div class="lang-pill" data-lang="en-IN" onclick="setVoiceLang(this,'English','en-IN')"><i class="fas fa-globe"></i> English</div>
+            <div class="lang-pill active" data-lang="hi-IN" onclick="setVoiceLang(this,'Hindi','hi-IN')"><i class="fas fa-globe"></i> हिंदी (Hindi)</div>
+            <div class="lang-pill" data-lang="te-IN" onclick="setVoiceLang(this,'Telugu','te-IN')"><i class="fas fa-globe"></i> తెలుగు (Telugu)</div>
+            <div class="lang-pill" data-lang="ta-IN" onclick="setVoiceLang(this,'Tamil','ta-IN')"><i class="fas fa-globe"></i> தமிழ் (Tamil)</div>
+            <div class="lang-pill" data-lang="mr-IN" onclick="setVoiceLang(this,'Marathi','mr-IN')"><i class="fas fa-globe"></i> मराठी (Marathi)</div>
+            <div class="lang-pill" data-lang="bn-IN" onclick="setVoiceLang(this,'Bengali','bn-IN')"><i class="fas fa-globe"></i> বাংলা (Bengali)</div>
+            <div class="lang-pill" data-lang="gu-IN" onclick="setVoiceLang(this,'Gujarati','gu-IN')"><i class="fas fa-globe"></i> ગુજરાતી (Gujarati)</div>
+            <div class="lang-pill" data-lang="kn-IN" onclick="setVoiceLang(this,'Kannada','kn-IN')"><i class="fas fa-globe"></i> ಕನ್ನಡ (Kannada)</div>
+            <div class="lang-pill" data-lang="ml-IN" onclick="setVoiceLang(this,'Malayalam','ml-IN')"><i class="fas fa-globe"></i> മലയാളം (Malayalam)</div>
+            <div class="lang-pill" data-lang="pa-IN" onclick="setVoiceLang(this,'Punjabi','pa-IN')"><i class="fas fa-globe"></i> ਪੰਜਾਬੀ (Punjabi)</div>
+            <div class="lang-pill" data-lang="or-IN" onclick="setVoiceLang(this,'Odia','or-IN')"><i class="fas fa-globe"></i> ଓଡ଼ିଆ (Odia)</div>
+            <div class="lang-pill" data-lang="as-IN" onclick="setVoiceLang(this,'Assamese','as-IN')"><i class="fas fa-globe"></i> অসমীয়া (Assamese)</div>
+            <div class="lang-pill" data-lang="ur-IN" onclick="setVoiceLang(this,'Urdu','ur-IN')"><i class="fas fa-globe"></i> اردو (Urdu)</div>
+            <div class="lang-pill" data-lang="sa-IN" onclick="setVoiceLang(this,'Sanskrit','sa-IN')"><i class="fas fa-globe"></i> संस्कृत (Sanskrit)</div>
+          </div>
+        </div>
+
+        <!-- Microphone button -->
+        <div style="text-align:center;padding:10px 0 28px;">
+          <div class="voice-circle" id="voiceCircle" onclick="startDashVoice()">
+            <i class="fas fa-microphone" id="voiceIcon"></i>
+          </div>
+          <h3 id="voiceStatus" style="color:var(--text,#f1f5f9);margin-bottom:8px;">Tap the microphone to speak</h3>
+          <p style="color:var(--text-muted,#64748b);font-size:0.83rem;">Clearly describe your crop name and symptoms</p>
+          <p style="margin-top:6px;font-size:0.78rem;color:#22c55e;font-weight:600;">Speaking in: <span id="voiceLangLabel">Hindi</span></p>
+        </div>
+        <div id="voiceResult"></div>
+      </div>
+
+      <!-- COMMUNITY -->
+      <div id="panel-community" class="content-panel">
+        <div class="section-heading"><div class="heading-icon"><i class="fas fa-users"></i></div><div><h2>Farmer Community</h2><p>Share knowledge and experiences with fellow farmers</p></div></div>
+        <div class="post-form">
+          <textarea id="newPostTA" placeholder="Share your farming experience or ask a question..."></textarea>
+          <button class="fc-btn" onclick="submitDashPost()"><i class="fas fa-paper-plane"></i> Post</button>
+        </div>
+        <div id="communityPostsDB">
+          <div class="community-post">
+            <div class="post-header"><div class="post-author"><h4>Rajesh K. (Farmer)</h4><p>Punjab &bull; Tomato</p></div><span class="post-time">2 hours ago</span></div>
+            <div class="post-body">Spotted early signs of leaf yellowing today. FarmShield gave immediate early blight advice. Applying Trichoderma before it spreads!</div>
+            <div class="post-actions"><button class="post-action-btn" onclick="this.querySelector('span').textContent=parseInt(this.querySelector('span').textContent)+1"><i class="far fa-thumbs-up"></i> <span>24</span> Likes</button><button class="post-action-btn" onclick="alert('Comment feature coming soon!')"><i class="far fa-comment"></i> Comment</button></div>
+          </div>
+          <div class="community-post">
+            <div class="post-header"><div class="post-author"><h4>Vicky Patil (Farmer)</h4><p>Maharashtra &bull; Cotton</p></div><span class="post-time">1 day ago</span></div>
+            <div class="post-body">Organic garlic spray works wonders for whitefly on cotton. Recommend for small holders in high-humidity zones!</div>
+            <div class="post-actions"><button class="post-action-btn" onclick="this.querySelector('span').textContent=parseInt(this.querySelector('span').textContent)+1"><i class="far fa-thumbs-up"></i> <span>18</span> Likes</button><button class="post-action-btn" onclick="alert('Comment feature coming soon!')"><i class="far fa-comment"></i> Comment</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPERTS -->
+      <div id="panel-experts" class="content-panel">
+        <div class="section-heading"><div class="heading-icon"><i class="fas fa-user-md"></i></div><div><h2>Agricultural Experts</h2><p>Connect with certified agricultural specialists</p></div></div>
+        <div class="feature-grid">
+          <div class="expert-card"><div class="expert-status-dot online"></div><h3>Dr. Ramesh Patel</h3><div class="expert-role">Plant Pathologist</div><div class="expert-meta"><div>Specialty: Fungal Blights &amp; Rot</div><div>Station: KVK Ludhiana</div><div>Rating: <span class="expert-rating">4.9 &#9733;</span></div></div><button class="fc-btn" style="width:100%;justify-content:center;margin-top:13px;" onclick="alert('Connecting to Dr. Ramesh Patel...')"><i class="fas fa-phone"></i> Call Expert</button></div>
+          <div class="expert-card"><div class="expert-status-dot online"></div><h3>Prof. Savita Kulkarni</h3><div class="expert-role">Agronomy Expert</div><div class="expert-meta"><div>Specialty: Organic IPM &amp; Fertilizer</div><div>Station: IARI New Delhi</div><div>Rating: <span class="expert-rating">4.8 &#9733;</span></div></div><button class="fc-btn" style="width:100%;justify-content:center;margin-top:13px;" onclick="alert('Connecting to Prof. Savita Kulkarni...')"><i class="fas fa-phone"></i> Call Expert</button></div>
+          <div class="expert-card"><div class="expert-status-dot offline"></div><h3>Er. Dinesh Kumar</h3><div class="expert-role">Smart Irrigation Specialist</div><div class="expert-meta"><div>Specialty: Drip &amp; Fertigation</div><div>Station: TNAU Coimbatore</div><div>Rating: <span class="expert-rating">4.7 &#9733;</span></div></div><button class="fc-btn" style="width:100%;justify-content:center;margin-top:13px;opacity:0.6;" onclick="alert('Er. Dinesh Kumar is currently busy.')"><i class="fas fa-clock"></i> Currently Busy</button></div>
+        </div>
+      </div>
+
+      <!-- OFFLINE MODE -->
+      <div id="panel-offline" class="content-panel">
+        <div class="section-heading"><div class="heading-icon"><i class="fas fa-wifi-slash"></i></div><div><h2>Offline Mode</h2><p>FarmShield works even without internet connectivity</p></div></div>
+        <div class="info-box"><h4><i class="fas fa-check-circle" style="color:#22c55e;margin-right:7px;"></i>Offline AI Active</h4><p>FarmShield caches a compressed AI model locally. Scan and diagnose crops even without internet.</p></div>
+        <div class="feature-grid">
+          <div class="feature-card"><div class="fc-icon"><i class="fas fa-brain"></i></div><h3>Local AI Model</h3><p>A lightweight 38-disease detection model is cached on your device for offline use.</p></div>
+          <div class="feature-card"><div class="fc-icon"><i class="fas fa-database"></i></div><h3>Cached Disease DB</h3><p>Full disease database with treatments and prevention tips stored locally.</p></div>
+          <div class="feature-card"><div class="fc-icon"><i class="fas fa-sync-alt"></i></div><h3>Auto Sync</h3><p>All offline scans are automatically synced to the cloud when connectivity is restored.</p></div>
+        </div>
+        <div class="info-box" style="border-left-color:#f59e0b;" id="netInfoBox">
+          <h4 id="netStatusH"><i class="fas fa-wifi" style="color:#22c55e;margin-right:7px;"></i>Currently Online</h4>
+          <p id="netStatusP">Real-time data syncing active. All features available.</p>
+        </div>
+      </div>
+
+      <!-- REGIONAL LANGUAGES -->
+      <div id="panel-languages" class="content-panel">
+        <div class="section-heading"><div class="heading-icon"><i class="fas fa-language"></i></div><div><h2>Regional Languages</h2><p>FarmShield supports 14+ Indian regional languages</p></div></div>
+        <div class="lang-grid">
+          <div class="lang-pill active" onclick="selLang(this,'Hindi')"><i class="fas fa-globe"></i> Hindi</div>
+          <div class="lang-pill" onclick="selLang(this,'Telugu')"><i class="fas fa-globe"></i> Telugu</div>
+          <div class="lang-pill" onclick="selLang(this,'Tamil')"><i class="fas fa-globe"></i> Tamil</div>
+          <div class="lang-pill" onclick="selLang(this,'Marathi')"><i class="fas fa-globe"></i> Marathi</div>
+          <div class="lang-pill" onclick="selLang(this,'Bengali')"><i class="fas fa-globe"></i> Bengali</div>
+          <div class="lang-pill" onclick="selLang(this,'Gujarati')"><i class="fas fa-globe"></i> Gujarati</div>
+          <div class="lang-pill" onclick="selLang(this,'Kannada')"><i class="fas fa-globe"></i> Kannada</div>
+          <div class="lang-pill" onclick="selLang(this,'Malayalam')"><i class="fas fa-globe"></i> Malayalam</div>
+          <div class="lang-pill" onclick="selLang(this,'Punjabi')"><i class="fas fa-globe"></i> Punjabi</div>
+          <div class="lang-pill" onclick="selLang(this,'Odia')"><i class="fas fa-globe"></i> Odia</div>
+          <div class="lang-pill" onclick="selLang(this,'Assamese')"><i class="fas fa-globe"></i> Assamese</div>
+          <div class="lang-pill" onclick="selLang(this,'Urdu')"><i class="fas fa-globe"></i> Urdu</div>
+          <div class="lang-pill" onclick="selLang(this,'English')"><i class="fas fa-globe"></i> English</div>
+          <div class="lang-pill" onclick="selLang(this,'Sanskrit')"><i class="fas fa-globe"></i> Sanskrit</div>
+        </div>
+        <div class="info-box">
+          <h4 id="langSelH"><i class="fas fa-check" style="color:#22c55e;margin-right:7px;"></i>Hindi Selected</h4>
+          <p id="langSelP">Voice assistant and notifications will be delivered in Hindi.</p>
+        </div>
+      </div>
+
+      <!-- DISEASE SEVERITY -->
+      <div id="panel-severity" class="content-panel">
+        <div class="section-heading"><div class="heading-icon"><i class="fas fa-traffic-light"></i></div><div><h2>Disease Severity System</h2><p>Color-coded severity levels for easy understanding</p></div></div>
+        <div class="severity-grid">
+          <div class="severity-card green"><div class="sev-icon">&#9989;</div><h3>Green &mdash; Healthy</h3><p>No disease detected. Continue regular care and monitoring.</p></div>
+          <div class="severity-card yellow"><div class="sev-icon">&#9888;&#65039;</div><h3>Yellow &mdash; Moderate</h3><p>Early-stage disease. Monitor closely and apply preventive treatment.</p></div>
+          <div class="severity-card orange"><div class="sev-icon">&#128998;</div><h3>Orange &mdash; High Risk</h3><p>Disease spreading. Immediate chemical or organic treatment required.</p></div>
+          <div class="severity-card red"><div class="sev-icon">&#128308;</div><h3>Red &mdash; Critical</h3><p>Severe infection. Emergency treatment and expert consultation needed.</p></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><h3><i class="fas fa-chart-pie"></i> Current Severity Distribution</h3></div>
+          <div class="disease-item"><div class="disease-bar" style="border-color:#22c55e;background:linear-gradient(90deg,rgba(34,197,94,0.18),rgba(34,197,94,0.04));"><span class="disease-name" style="color:#22c55e;">Healthy (38%)</span><span class="disease-count" style="color:#22c55e;">474</span></div></div>
+          <div class="disease-item"><div class="disease-bar" style="border-color:#eab308;background:linear-gradient(90deg,rgba(234,179,8,0.18),rgba(234,179,8,0.04));"><span class="disease-name" style="color:#eab308;">Mild (25%)</span><span class="disease-count" style="color:#eab308;">312</span></div></div>
+          <div class="disease-item"><div class="disease-bar" style="border-color:#f97316;background:linear-gradient(90deg,rgba(249,115,22,0.18),rgba(249,115,22,0.04));"><span class="disease-name" style="color:#f97316;">Moderate (20%)</span><span class="disease-count" style="color:#f97316;">249</span></div></div>
+          <div class="disease-item"><div class="disease-bar" style="border-color:#ef4444;background:linear-gradient(90deg,rgba(239,68,68,0.18),rgba(239,68,68,0.04));"><span class="disease-name" style="color:#ef4444;">Severe (17%)</span><span class="disease-count" style="color:#ef4444;">212</span></div></div>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div id="panel-faq" class="content-panel">
+        <div class="section-heading"><div class="heading-icon"><i class="fas fa-question-circle"></i></div><div><h2>Frequently Asked Questions</h2><p>Common questions about FarmShield</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="this.closest('.faq-item').classList.toggle('open')">How does FarmShield detect crop diseases? <i class="fas fa-chevron-down"></i></div><div class="faq-a">FarmShield uses a deep learning model trained on 87,000+ crop images across 38 disease types. Photograph the affected leaf and the AI returns a diagnosis with 96.8% accuracy within seconds.</div></div>
+        <div class="faq-item"><div class="faq-q" onclick="this.closest('.faq-item').classList.toggle('open')">Does FarmShield work without internet? <i class="fas fa-chevron-down"></i></div><div class="faq-a">Yes! FarmShield has an offline mode that caches the AI model locally. You can scan and diagnose diseases without internet. Data syncs when you come back online.</div></div>
+        <div class="faq-item"><div class="faq-q" onclick="this.closest('.faq-item').classList.toggle('open')">Which languages are supported for voice diagnosis? <i class="fas fa-chevron-down"></i></div><div class="faq-a">FarmShield supports Hindi, Telugu, Tamil, Marathi, Bengali, Gujarati, Kannada, Malayalam, Punjabi, and English for voice diagnosis. More languages are being added regularly.</div></div>
+        <div class="faq-item"><div class="faq-q" onclick="this.closest('.faq-item').classList.toggle('open')">How accurate is the AI disease detection? <i class="fas fa-chevron-down"></i></div><div class="faq-a">Our AI model achieves 96.8% accuracy across 38 known crop diseases. For critical decisions, always also consult an agricultural expert.</div></div>
+        <div class="faq-item"><div class="faq-q" onclick="this.closest('.faq-item').classList.toggle('open')">Can I share my diagnosis with an expert? <i class="fas fa-chevron-down"></i></div><div class="faq-a">Yes, after any diagnosis you can share the full report with our certified agricultural experts via the Experts panel for personalized treatment advice.</div></div>
+        <div class="faq-item"><div class="faq-q" onclick="this.closest('.faq-item').classList.toggle('open')">What crops does FarmShield support? <i class="fas fa-chevron-down"></i></div><div class="faq-a">FarmShield currently supports Tomato, Potato, Rice, Wheat, Corn, Apple, Grape, Pepper, and many more. We continuously expand our crop database with each update.</div></div>
+      </div>
+
+      <!-- USER GUIDE -->
+      <div id="panel-guide" class="content-panel">
+        <div class="section-heading"><div class="heading-icon"><i class="fas fa-book"></i></div><div><h2>User Guide</h2><p>Step-by-step instructions to get the most from FarmShield</p></div></div>
+        <div class="chart-card" style="margin-bottom:20px;">
+          <div class="chart-header"><h3><i class="fas fa-camera"></i> How to Scan a Crop</h3></div>
+          <div class="guide-step"><div class="step-num">1</div><div class="step-content"><h4>Open One-Tap Scan</h4><p>Click the camera button or select "One&#8209;Tap Scan" in the sidebar to open the scanning interface.</p></div></div>
+          <div class="guide-step"><div class="step-num">2</div><div class="step-content"><h4>Capture or Upload Image</h4><p>Take a clear photo of the affected leaf. Ensure good lighting and the diseased area is clearly visible.</p></div></div>
+          <div class="guide-step"><div class="step-num">3</div><div class="step-content"><h4>Wait for AI Analysis</h4><p>FarmShield's AI analyzes the image in 2&ndash;5 seconds and identifies the disease with confidence percentage.</p></div></div>
+          <div class="guide-step"><div class="step-num">4</div><div class="step-content"><h4>Review Results &amp; Treatment</h4><p>Read the detailed diagnosis: disease name, severity, organic treatments, chemical pesticides, and prevention tips.</p></div></div>
+          <div class="guide-step"><div class="step-num">5</div><div class="step-content"><h4>Consult Expert if Needed</h4><p>For critical cases, use the Experts panel to connect with a certified plant pathologist.</p></div></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><h3><i class="fas fa-microphone"></i> How to Use Voice Diagnosis</h3></div>
+          <div class="guide-step"><div class="step-num">1</div><div class="step-content"><h4>Open Voice Diagnosis</h4><p>Navigate to Voice Diagnosis in the sidebar or tap the microphone icon in the navigation bar.</p></div></div>
+          <div class="guide-step"><div class="step-num">2</div><div class="step-content"><h4>Tap the Microphone</h4><p>Press the large microphone button. Allow microphone access when prompted by your browser.</p></div></div>
+          <div class="guide-step"><div class="step-num">3</div><div class="step-content"><h4>Describe Symptoms</h4><p>Clearly state the crop name and symptoms: e.g., "My tomato leaves are turning yellow with brown spots."</p></div></div>
+          <div class="guide-step"><div class="step-num">4</div><div class="step-content"><h4>Get AI Advice</h4><p>FarmShield's NLP engine processes your query and returns targeted agricultural advice in seconds.</p></div></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="panel-settings" class="content-panel">
+        <div class="section-heading"><div class="heading-icon"><i class="fas fa-cog"></i></div><div><h2>Settings</h2><p>Manage your FarmShield preferences</p></div></div>
+        <div class="chart-card">
+          <div class="settings-group">
+            <h3>Appearance</h3>
+            <div class="settings-row"><div class="settings-label"><h4>Dark Mode</h4><p>Switch between dark and light theme</p></div><label class="toggle-switch"><input type="checkbox" id="darkToggle" checked onchange="toggleDark(this)"><span class="toggle-slider"></span></label></div>
+            <div class="settings-row"><div class="settings-label"><h4>Large Text (Farmer Mode)</h4><p>Increase font size for easier reading</p></div><label class="toggle-switch"><input type="checkbox" id="lgTextToggle" onchange="document.body.style.fontSize=this.checked?'1.1rem':'';"><span class="toggle-slider"></span></label></div>
+          </div>
+          <div class="settings-group">
+            <h3>Notifications</h3>
+            <div class="settings-row"><div class="settings-label"><h4>Disease Outbreak Alerts</h4><p>Get alerts when disease is detected in your area</p></div><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            <div class="settings-row"><div class="settings-label"><h4>Weather Alerts</h4><p>Receive weather-based crop risk notifications</p></div><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            <div class="settings-row"><div class="settings-label"><h4>Daily Task Reminders</h4><p>Reminder for daily farm management tasks</p></div><label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+          </div>
+          <div class="settings-group">
+            <h3>AI &amp; Privacy</h3>
+            <div class="settings-row"><div class="settings-label"><h4>Offline AI Mode</h4><p>Use cached AI model when offline</p></div><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            <div class="settings-row"><div class="settings-label"><h4>Share Anonymous Scan Data</h4><p>Help improve AI accuracy (no personal data shared)</p></div><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+          </div>
+          <button class="fc-btn" onclick="alert('Settings saved successfully!')"><i class="fas fa-save"></i> Save Settings</button>
+        </div>
+      </div>
+
+      <!-- SUPPORT -->
+      <div id="panel-support" class="content-panel">
+        <div class="section-heading"><div class="heading-icon"><i class="fas fa-headset"></i></div><div><h2>Support &amp; Helpline</h2><p>Connect with government agricultural helplines</p></div></div>
+        <div class="support-card" onclick="alert('Dialing Kisan Call Centre: 1551...')"><div class="support-icon" style="background:rgba(34,197,94,0.14);color:#22c55e;"><i class="fas fa-phone-alt"></i></div><div class="support-info"><h3>Kisan Call Centre</h3><p>Government of India &bull; 24/7 toll-free</p></div><div class="support-number">1551</div></div>
+        <div class="support-card" onclick="alert('Dialing KVK Helpline: 1800-180-1551...')"><div class="support-icon" style="background:rgba(59,130,246,0.14);color:#3b82f6;"><i class="fas fa-building"></i></div><div class="support-info"><h3>KVK Helpline</h3><p>Krishi Vigyan Kendra &bull; Expert guidance</p></div><div class="support-number">1800-180-1551</div></div>
+        <div class="support-card" onclick="alert('Dialing Agri-Expert Hotline: 1800-11-1363...')"><div class="support-icon" style="background:rgba(245,158,11,0.14);color:#f59e0b;"><i class="fas fa-user-tie"></i></div><div class="support-info"><h3>Agri-Expert Emergency</h3><p>Emergency crop disease consultation</p></div><div class="support-number">1800-11-1363</div></div>
+        <div class="support-card" onclick="alert('Dialing PM Kisan Helpline: 155261...')"><div class="support-icon" style="background:rgba(239,68,68,0.14);color:#ef4444;"><i class="fas fa-landmark"></i></div><div class="support-info"><h3>PM Kisan Helpline</h3><p>Pradhan Mantri Kisan Samman Nidhi</p></div><div class="support-number">155261</div></div>
+        <div class="info-box" style="margin-top:12px;"><h4><i class="fas fa-envelope" style="color:#22c55e;margin-right:7px;"></i>Email Support</h4><p>For non-urgent queries: <strong>support@farmshield.in</strong> &mdash; We respond within 24 hours.</p></div>
+      </div>
+
+    </main>
+  </div><!-- /db-shell -->
+
+  <script>
+    'use strict';
+    // ── Theme ──
+    (function(){
+      const t = localStorage.getItem('farmshield_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+      const dt = document.getElementById('darkToggle');
+      if(dt) dt.checked = (t === 'dark');
+      updateThemeIcon(t);
+    })();
+
+    document.addEventListener('DOMContentLoaded', function(){
+      document.getElementById('themeToggle').addEventListener('click', function(){
+        const c = document.documentElement.getAttribute('data-theme');
+        const n = c === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', n);
+        localStorage.setItem('farmshield_theme', n);
+        updateThemeIcon(n);
+        const dt = document.getElementById('darkToggle');
+        if(dt) dt.checked = (n === 'dark');
+      });
+      document.getElementById('mobToggle').addEventListener('click', openSB);
+      document.getElementById('sidebarOverlay').addEventListener('click', closeSB);
+      updateNetStatus();
+      window.addEventListener('online', updateNetStatus);
+      window.addEventListener('offline', updateNetStatus);
+      animateCounters();
+    });
+
+    function updateThemeIcon(t){
+      const i = document.querySelector('#themeToggle i');
+      if(i) i.className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+
+    // ── Panel switching ──
+    function showPanel(id, btn){
+      document.querySelectorAll('.content-panel').forEach(function(p){ p.classList.remove('active'); });
+      document.querySelectorAll('.sb-btn').forEach(function(b){ b.classList.remove('active'); });
+      var p = document.getElementById('panel-' + id);
+      if(p) p.classList.add('active');
+      if(btn) btn.classList.add('active');
+      closeSB();
+    }
+
+    // ── Mobile sidebar ──
+    function openSB(){ document.getElementById('dbSidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); }
+    function closeSB(){ document.getElementById('dbSidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
+
+    // ── Counter animation ──
+    function animateCounters(){
+      document.querySelectorAll('.stat-content h3').forEach(function(el){
+        var raw = parseFloat(el.textContent.replace(/[^0-9.]/g,''));
+        if(!raw) return;
+        var suffix = el.textContent.replace(/[0-9,.]/g,'').trim();
+        var c = 0, inc = raw / 50;
+        var t = setInterval(function(){
+          c = Math.min(c + inc, raw);
+          el.textContent = Math.floor(c).toLocaleString() + (suffix || '');
+          if(c >= raw) clearInterval(t);
+        }, 20);
+      });
+    }
+
+    // ── Refresh ──
+    function doRefresh(e){
+      var btn = e.target.closest('.refresh-btn');
+      btn.style.transition = 'transform 0.5s';
+      btn.style.transform = 'rotate(360deg)';
+      setTimeout(function(){ btn.style.transform = ''; }, 550);
+    }
+    window.refreshHealthScore = doRefresh;
+
+    // ── Logout ──
+    async function handleLogout(){
+      if (!confirm('Are you sure you want to logout?')) return;
+      try {
+        var r = await fetch('/logout', {method: 'POST', headers: {'Content-Type': 'application/json'}});
+        if(r.ok) {
+          console.log('✅ Logout successful');
+          window.location.href='/login';
+        } else {
+          console.error('❌ Logout failed');
+          alert('Logout failed. Please try again.');
+        }
+      }
+      catch(e){
+        console.error('Logout error:', e);
+        alert('Network error during logout');
+      }
+    }
+    window.handleLogout = handleLogout;
+
+    // ── Language select ──
+    function selLang(el, name){
+      document.querySelectorAll('.lang-pill').forEach(function(p){ p.classList.remove('active'); });
+      el.classList.add('active');
+      document.getElementById('langSelH').innerHTML = '<i class="fas fa-check" style="color:#22c55e;margin-right:7px;"></i>' + name + ' Selected';
+      document.getElementById('langSelP').textContent = 'Voice assistant and notifications will be delivered in ' + name + '.';
+    }
+
+    // ── Dark mode toggle (settings) ──
+    function toggleDark(cb){
+      var t = cb.checked ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('farmshield_theme', t);
+      updateThemeIcon(t);
+    }
+
+    // ── Network status ──
+    function updateNetStatus(){
+      var h = document.getElementById('netStatusH'), p = document.getElementById('netStatusP');
+      if(!h) return;
+      if(navigator.onLine){
+        h.innerHTML = '<i class="fas fa-wifi" style="color:#22c55e;margin-right:7px;"></i>Currently Online';
+        p.textContent = 'Real-time data syncing active. All features available.';
+      } else {
+        h.innerHTML = '<i class="fas fa-wifi-slash" style="color:#f59e0b;margin-right:7px;"></i>Offline Mode Active';
+        p.textContent = 'Using cached AI model. Diagnoses will sync when connection is restored.';
+      }
+    }
+
+    // ── Voice language state ──
+    var _voiceLang = 'hi-IN';
+    var _voiceLangName = 'Hindi';
+
+    function setVoiceLang(el, name, code){
+      document.querySelectorAll('#voiceLangGrid .lang-pill').forEach(function(p){ p.classList.remove('active'); });
+      el.classList.add('active');
+      _voiceLang = code;
+      _voiceLangName = name;
+      document.getElementById('voiceLangDisplay').textContent = name;
+      document.getElementById('voiceLangLabel').textContent = name;
+      document.getElementById('voiceStatus').textContent = 'Tap the microphone to speak in ' + name;
+    }
+
+    // ── Voice ──
+    function startDashVoice(){
+      var circle = document.getElementById('voiceCircle');
+      var icon = document.getElementById('voiceIcon');
+      var status = document.getElementById('voiceStatus');
+      var SC = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(!SC){
+        document.getElementById('voiceResult').innerHTML = '<div class="info-box" style="border-left-color:#ef4444;"><h4><i class="fas fa-exclamation-circle" style="color:#ef4444;margin-right:7px;"></i>Not Supported</h4><p>Voice diagnosis requires a browser with Web Speech API support (e.g. Google Chrome or Edge).</p></div>';
+        return;
+      }
+      circle.classList.add('listening');
+      icon.className = 'fas fa-stop';
+      status.textContent = 'Listening in ' + _voiceLangName + '... Speak now';
+      var rec = new SC();
+      rec.lang = _voiceLang;
+      rec.continuous = false;
+      rec.interimResults = false;
+      rec.start();
+      rec.onresult = function(e){
+        circle.classList.remove('listening');
+        icon.className = 'fas fa-microphone';
+        status.textContent = 'Tap the microphone to speak in ' + _voiceLangName;
+        var q = e.results[0][0].transcript;
+        var box = document.getElementById('voiceResult');
+        box.innerHTML = '<div class="info-box"><h4><i class="fas fa-comment-alt" style="color:#22c55e;margin-right:7px;"></i>Your Query (' + _voiceLangName + ')</h4><p style="font-style:italic;">"' + q + '"</p></div><div style="text-align:center;padding:16px;"><i class="fas fa-spinner fa-spin" style="color:#22c55e;font-size:1.4rem;"></i><p style="margin-top:8px;color:var(--text-muted,#64748b);font-size:0.82rem;">Analyzing with FarmShield AI...</p></div>';
+        fetch('/api/voice-diagnosis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:q,language:_voiceLang})})
+          .then(function(r){return r.json();})
+          .then(function(d){
+            if(!d.success || !d.diagnosis){
+              box.innerHTML = '<div class="info-box"><h4><i class="fas fa-comment-alt" style="color:#22c55e;margin-right:7px;"></i>Your Query (' + _voiceLangName + ')</h4><p style="font-style:italic;">"' + q + '"</p></div><div class="info-box" style="border-left-color:#ef4444;"><h4><i class="fas fa-exclamation-circle" style="color:#ef4444;margin-right:7px;"></i>Diagnosis Error</h4><p>' + (d.error || 'Could not analyze. Please try again.') + '</p></div><div style="text-align:center;margin-top:12px;"><button class="fc-btn" onclick="startDashVoice()"><i class="fas fa-redo"></i> Try Again</button></div>';
+              return;
+            }
+            var diag = d.diagnosis;
+            var info = d.extracted_info || {};
+            var recs = d.recommendations || [];
+            var steps = d.next_steps || [];
+            var conf = diag.confidence || 0;
+            var sev = diag.severity || info.severity || 'unknown';
+            var crop = info.crop && info.crop !== 'Unknown crop' ? info.crop : (diag.crop || 'General');
+            var sevColor = sev === 'severe' ? '#ef4444' : sev === 'moderate' ? '#f59e0b' : sev === 'mild' ? '#22c55e' : '#6b7280';
+            var treatment = diag.treatment || {};
+            var treatHtml = '';
+            if(treatment.immediate) treatHtml += '<div style="margin-bottom:8px;padding:8px 12px;background:rgba(239,68,68,0.1);border-radius:8px;border-left:3px solid #ef4444;"><strong style="color:#ef4444;">🚨 Immediate:</strong> ' + treatment.immediate + '</div>';
+            if(treatment.organic && treatment.organic.length) treatHtml += '<div style="margin-bottom:8px;"><strong style="color:#22c55e;">🌿 Organic:</strong> ' + treatment.organic.join(', ') + '</div>';
+            if(treatment.chemical && treatment.chemical.length) treatHtml += '<div style="margin-bottom:8px;"><strong style="color:#3b82f6;">💊 Chemical:</strong> ' + treatment.chemical.join(', ') + '</div>';
+            if(treatment.prevention && treatment.prevention.length) treatHtml += '<div style="margin-bottom:8px;"><strong style="color:#8b5cf6;">🛡️ Prevention:</strong> ' + treatment.prevention.join(', ') + '</div>';
+            var recsHtml = recs.length ? '<ul style="padding-left:18px;margin:6px 0;">' + recs.map(function(r){return '<li style="margin-bottom:4px;">'+r+'</li>';}).join('') + '</ul>' : '';
+            var stepsHtml = steps.length ? '<ol style="padding-left:18px;margin:6px 0;">' + steps.map(function(s){return '<li style="margin-bottom:4px;">'+s+'</li>';}).join('') + '</ol>' : '';
+            var suggHtml = '';
+            if(diag.general_suggestions && diag.general_suggestions.length){
+              suggHtml = '<ul style="padding-left:18px;margin:6px 0;">' + diag.general_suggestions.map(function(s){return '<li style="margin-bottom:4px;">'+s+'</li>';}).join('') + '</ul>';
+            }
+            box.innerHTML =
+              '<div class="info-box"><h4><i class="fas fa-comment-alt" style="color:#22c55e;margin-right:7px;"></i>Your Query (' + _voiceLangName + ')</h4><p style="font-style:italic;">"' + q + '"</p></div>' +
+              '<div class="info-box" style="border-left-color:' + sevColor + ';margin-top:12px;">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">' +
+                  '<h4 style="margin:0;"><i class="fas fa-stethoscope" style="color:' + sevColor + ';margin-right:7px;"></i>' + diag.disease_name + '</h4>' +
+                  (conf > 0 ? '<span style="background:' + sevColor + ';color:white;padding:3px 10px;border-radius:20px;font-size:0.8rem;font-weight:700;">' + conf + '% Confidence</span>' : '') +
+                '</div>' +
+                '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">' +
+                  '<span style="background:rgba(255,255,255,0.07);padding:4px 10px;border-radius:8px;font-size:0.85rem;"><i class="fas fa-seedling" style="color:#22c55e;margin-right:5px;"></i><strong>Crop:</strong> ' + crop + '</span>' +
+                  '<span style="background:rgba(255,255,255,0.07);padding:4px 10px;border-radius:8px;font-size:0.85rem;color:' + sevColor + ';"><i class="fas fa-heartbeat" style="margin-right:5px;"></i><strong>Severity:</strong> ' + sev + '</span>' +
+                '</div>' +
+                (diag.causes ? '<div style="margin-bottom:10px;"><strong style="color:#94a3b8;">📋 Causes:</strong> ' + diag.causes + '</div>' : '') +
+                (treatHtml ? '<div style="margin-bottom:10px;"><strong style="color:#94a3b8;display:block;margin-bottom:6px;">💊 Treatment:</strong>' + treatHtml + '</div>' : '') +
+                (recsHtml ? '<div style="margin-bottom:10px;"><strong style="color:#94a3b8;display:block;margin-bottom:4px;">💡 Recommendations:</strong>' + recsHtml + '</div>' : '') +
+                (suggHtml ? '<div style="margin-bottom:10px;"><strong style="color:#f59e0b;display:block;margin-bottom:4px;">ℹ️ Please Provide More Details:</strong>' + suggHtml + '</div>' : '') +
+                (stepsHtml ? '<div><strong style="color:#94a3b8;display:block;margin-bottom:4px;">📋 Next Steps:</strong>' + stepsHtml + '</div>' : '') +
+              '</div>' +
+              '<div style="text-align:center;margin-top:12px;"><button class="fc-btn" onclick="startDashVoice()"><i class="fas fa-redo"></i> Ask Another Question</button></div>';
+          })
+          .catch(function(){
+            document.getElementById('voiceResult').innerHTML = '<div class="info-box" style="border-left-color:#ef4444;"><h4>Connection Error</h4><p>Failed to reach the AI server. Please check your connection and try again.</p></div><div style="text-align:center;margin-top:12px;"><button class="fc-btn" onclick="startDashVoice()"><i class="fas fa-redo"></i> Retry</button></div>';
+          });
+      };
+      rec.onerror = function(ev){
+        circle.classList.remove('listening');
+        icon.className = 'fas fa-microphone';
+        status.textContent = 'Tap the microphone to speak in ' + _voiceLangName;
+        var msg = ev.error === 'not-allowed' ? 'Microphone access denied. Please allow microphone permission in your browser.' : 'Voice recognition error: ' + ev.error + '. Please try again.';
+        document.getElementById('voiceResult').innerHTML = '<div class="info-box" style="border-left-color:#ef4444;"><h4><i class="fas fa-exclamation-circle" style="color:#ef4444;margin-right:7px;"></i>Microphone Error</h4><p>' + msg + '</p></div>';
+      };
+      rec.onend = function(){ circle.classList.remove('listening'); icon.className = 'fas fa-microphone'; };
+    }
+
+    // ── Camera ──
+    var _camStream = null;
+
+    function openDashCamera(){
+      var container = document.getElementById('camContainer');
+      var denied = document.getElementById('camDenied');
+      denied.style.display = 'none';
+      navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false})
+        .then(function(stream){
+          _camStream = stream;
+          var video = document.getElementById('camVideo');
+          video.srcObject = stream;
+          container.style.display = 'block';
+          document.getElementById('openCamBtn').style.display = 'none';
+        })
+        .catch(function(err){
+          if(err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError'){
+            denied.style.display = 'block';
+          } else {
+            denied.innerHTML = '<h4><i class="fas fa-exclamation-circle" style="color:#f59e0b;margin-right:7px;"></i>Camera Unavailable</h4><p>Could not access camera: ' + (err.message || err.name) + '. Please use the upload option instead.</p><button class="fc-btn" style="margin-top:10px;" onclick="document.getElementById(\'dashFile\').click()"><i class="fas fa-upload"></i> Upload Image</button>';
+            denied.style.display = 'block';
+          }
+        });
+    }
+
+    function retryDashCamera(){
+      document.getElementById('camDenied').style.display = 'none';
+      openDashCamera();
+    }
+
+    function closeDashCamera(){
+      if(_camStream){ _camStream.getTracks().forEach(function(t){ t.stop(); }); _camStream = null; }
+      document.getElementById('camContainer').style.display = 'none';
+      document.getElementById('openCamBtn').style.display = '';
+    }
+
+    function snapDashPhoto(){
+      var video = document.getElementById('camVideo');
+      var canvas = document.getElementById('snapCanvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      closeDashCamera();
+      canvas.toBlob(function(blob){
+        var file = new File([blob], 'captured_leaf.jpg', {type:'image/jpeg'});
+        var dt = new DataTransfer();
+        dt.items.add(file);
+        var fi = document.getElementById('dashFile');
+        fi.files = dt.files;
+        handleDashFile({target: fi});
+      }, 'image/jpeg', 0.92);
+    }
+
+    // ── Scan file ──
+    function handleDashFile(e){
+      var file = e.target.files[0]; if(!file) return;
+      var box = document.getElementById('dashScanResult');
+      box.innerHTML = '<div class="info-box" style="text-align:center;"><i class="fas fa-spinner fa-spin" style="color:#22c55e;font-size:1.8rem;"></i><p style="margin-top:10px;">Analyzing crop health with FarmShield AI...</p></div>';
+      var fd = new FormData(); fd.append('file', file);
+      fetch('/api/predict',{method:'POST',body:fd})
+        .then(function(r){return r.json();})
+        .then(function(data){
+          if(data.error){ box.innerHTML = '<div class="info-box" style="border-left-color:#ef4444;"><h4>Error</h4><p>' + data.error + '</p></div>'; return; }
+          var d = data.disease;
+          box.innerHTML = '<div class="chart-card"><div class="chart-header"><h3><i class="fas fa-virus"></i> Diagnosis Result</h3><span style="padding:4px 11px;background:'+d.color+'22;color:'+d.color+';border-radius:20px;font-size:0.78rem;font-weight:700;">'+d.severity+'</span></div><div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;"><div style="width:50px;height:50px;border-radius:13px;background:'+d.color+'22;color:'+d.color+';display:flex;align-items:center;justify-content:center;font-size:1.3rem;"><i class="'+d.icon+'"></i></div><div><h3 style="color:var(--text,#f1f5f9);font-weight:800;">'+d.name+'</h3><p style="color:var(--text-muted,#64748b);font-size:0.82rem;">Crop: '+d.crop+' &bull; Confidence: '+d.confidence+'%</p></div></div><p><strong>Causes:</strong> '+d.causes+'</p><p style="margin-top:7px;"><strong>Organic Treatment:</strong> '+d.organic+'</p><p style="margin-top:7px;"><strong>Pesticide:</strong> '+d.pesticide+'</p><p style="margin-top:7px;"><strong>Impact:</strong> '+d.impact+'</p></div>';
+        })
+        .catch(function(){ box.innerHTML = '<div class="info-box" style="border-left-color:#ef4444;"><h4>Error</h4><p>Failed to connect to the diagnosis server. Please try again.</p></div>'; });
+    }
+
+    // ── Community post ──
+    function submitDashPost(){
+      var ta = document.getElementById('newPostTA');
+      var val = ta.value.trim(); if(!val){ alert('Please write something first.'); return; }
+      var div = document.createElement('div');
+      div.className = 'community-post'; div.style.animation = 'panelIn 0.4s ease';
+      div.innerHTML = '<div class="post-header"><div class="post-author"><h4>You (Farmer)</h4><p>Local &bull; General</p></div><span class="post-time">Just now</span></div><div class="post-body">' + val + '</div><div class="post-actions"><button class="post-action-btn" onclick="this.querySelector(\'span\').textContent=parseInt(this.querySelector(\'span\').textContent)+1"><i class="far fa-thumbs-up"></i> <span>1</span> Likes</button><button class="post-action-btn" onclick="alert(\'Comment feature coming soon!\')"><i class="far fa-comment"></i> Comment</button></div>';
+      document.getElementById('communityPostsDB').prepend(div);
+      ta.value = '';
+    }
+  </script>
+</body>
+</html>
