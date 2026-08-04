@@ -987,40 +987,15 @@
           if (voiceModal) {
             voiceModal.classList.add('hidden');
             // Stop recording if active
-            if (window.voiceDiagnosis && window.voiceDiagnosis.isRecording) {
-              window.voiceDiagnosis.stopRecording();
+            if (_micIsRecording && _micRecognition) {
+              _micRecognition.stop();
+              _micIsRecording = false;
             }
           }
         });
       }
 
-      // Language selector change
-      const languageSelect = document.getElementById('voiceLanguageSelect');
-      if (languageSelect) {
-        languageSelect.addEventListener('change', (e) => {
-          if (window.voiceDiagnosis) {
-            window.voiceDiagnosis.setLanguage(e.target.value);
-          }
-        });
-      }
-
-      // Microphone button click
-      const micButton = document.getElementById('voiceMicButton');
-      if (micButton) {
-        micButton.addEventListener('click', () => {
-          if (window.voiceDiagnosis) {
-            if (window.voiceDiagnosis.isRecording) {
-              window.voiceDiagnosis.stopRecording();
-            } else {
-              window.voiceDiagnosis.startRecording();
-              const container = document.getElementById('recognizedTextContainer');
-              if (container) {
-                container.style.display = 'block';
-              }
-            }
-          }
-        });
-      }
+      // Microphone button click is handled by onclick="handleMicClick()" on the button itself
 
       // Check for OAuth success messages
       const urlParams = new URLSearchParams(window.location.search);
