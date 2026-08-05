@@ -837,7 +837,7 @@ class AuthenticationSystem:
                 user = cursor.fetchone()
                 if user:
                     email = user[0]
-                    self.security.send_otp_email(email, new_otp)
+                    self.email_manager.send_otp_email(email, new_otp)
                     logger.info(f"OTP resent to {email}")
                 
                 return {'success': True, 'message': 'OTP resent successfully'}

@@ -67,53 +67,6 @@ app.config["PERMANENT_SESSION_LIFETIME"] = 3600  # 1 hour
 auth_system = create_auth_system(app)
 print("✅ Authentication System initialized")
 
-USERS_FILE = os.path.join(os.path.dirname(__file__), "users.json")
-
-def load_users():
-    if not os.path.exists(USERS_FILE):
-        return {}
-    try:
-        with open(USERS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"[FarmShield] Error loading users: {e}")
-        return {}
-
-def save_users(users):
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(users, f, indent=2)
-
-def init_default_users():
-    """Initialize default test users if users.json doesn't exist"""
-    users = load_users()
-    if not users:
-        default_users = {
-            "test@farmshield.com": {
-                "name": "Test Farmer",
-                "password_hash": hash_password("password123"),
-                "created": datetime.datetime.utcnow().isoformat()
-            },
-            "farmer@example.com": {
-                "name": "Demo Farmer",
-                "password_hash": hash_password("demo123"),
-                "created": datetime.datetime.utcnow().isoformat()
-            },
-            "googledemo@farmshield.com": {
-                "name": "Google Demo User",
-                "password_hash": hash_password("oauth_google_user"),
-                "created": datetime.datetime.utcnow().isoformat()
-            },
-            "microsoftdemo@farmshield.com": {
-                "name": "Microsoft Demo User",
-                "password_hash": hash_password("oauth_microsoft_user"),
-                "created": datetime.datetime.utcnow().isoformat()
-            }
-        }
-        save_users(default_users)
-
-def hash_password(pw):
-    return base64.b64encode(pw.encode()).decode()
-
 
 app.config["MAX_CONTENT_LENGTH"] = 15 * 1024 * 1024
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "bmp"}
@@ -523,8 +476,7 @@ def api_login():
         return jsonify({"error": "Email and password required"}), 400
     
     try:
-        conn = sqlite3.connect('farmshield.db')
-        conn.row_factory = sqlite3.Row
+        conn = auth_system.db.get_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
         user = cursor.fetchone()
@@ -893,7 +845,7 @@ def not_found(e):
 def server_error(e):
     return jsonify({"error": "Internal server error"}), 500
 
-def init_default_users():
+def init_db_default_users():
     """Initialize default test users in the database"""
     try:
         conn = auth_system.db.get_connection()
@@ -943,8 +895,10 @@ def init_default_users():
     except Exception as e:
         print(f"❌ Error creating default users: {e}")
 
+# Initialize users on import/load
+init_db_default_users()
+
 if __name__ == "__main__":
-    init_default_users()
     
     port = int(os.environ.get('PORT', 5000))
     debug_mode = os.environ.get('FLASK_ENV') != 'production'
