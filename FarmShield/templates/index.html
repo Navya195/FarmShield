@@ -230,6 +230,8 @@
           <i class="fas fa-microphone" style="font-size:3rem; color:white;"></i>
         </button>
         <p id="voiceStatus" style="margin-top:20px; font-weight:600; font-size:1.1rem; color:var(--text-primary);">Click microphone to start</p>
+        <div id="recordingIndicator" style="display:none; color:#ef4444; font-weight:600; margin-top:10px; font-size:0.95rem;"></div>
+        <div id="recordingTimer" style="display:none; color:#ef4444; font-weight:700; margin-top:10px; font-size:1.2rem; font-family:monospace;"></div>
 
         <!-- Or type symptoms -->
         <div style="margin-top:20px; display:flex; gap:8px; max-width:500px; margin-left:auto; margin-right:auto;">
@@ -272,9 +274,8 @@
   <!-- Route Protection Script (must load first) -->
   <script src="{{ url_for('static', filename='js/route-protection.js') }}"></script>
   
-  <!-- Voice Diagnosis Scripts -->
-  <script src="{{ url_for('static', filename='js/voice-diagnosis.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/voice-fix.js') }}"></script>
+  <!-- NEW: Complete Voice Diagnosis System v3.0 -->
+  <script src="{{ url_for('static', filename='js/voice-system.js') }}"></script>
   
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   <script src="{{ url_for('static', filename='js/farmer.js') }}"></script>
