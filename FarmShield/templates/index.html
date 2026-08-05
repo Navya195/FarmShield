@@ -226,15 +226,15 @@
 
       <!-- Microphone Control -->
       <div style="text-align:center; margin-bottom:24px; padding:32px; background:var(--bg-secondary); border-radius:12px; border:1px solid var(--border);">
-        <button id="voiceMicButton" onclick="handleMicClick()" style="width:120px; height:120px; border-radius:50%; background:linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary)); border:4px solid var(--bg-card); box-shadow:0 8px 25px rgba(34, 197, 94, 0.3); cursor:pointer; transition:all 0.3s ease; display:flex; align-items:center; justify-content:center; margin:0 auto; outline:none;">
+        <button id="voiceMicButton" style="width:120px; height:120px; border-radius:50%; background:linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary)); border:4px solid var(--bg-card); box-shadow:0 8px 25px rgba(34, 197, 94, 0.3); cursor:pointer; transition:all 0.3s ease; display:flex; align-items:center; justify-content:center; margin:0 auto; outline:none;">
           <i class="fas fa-microphone" style="font-size:3rem; color:white;"></i>
         </button>
         <p id="voiceStatus" style="margin-top:20px; font-weight:600; font-size:1.1rem; color:var(--text-primary);">Click microphone to start</p>
 
         <!-- Or type symptoms -->
         <div style="margin-top:20px; display:flex; gap:8px; max-width:500px; margin-left:auto; margin-right:auto;">
-          <input type="text" id="voiceTextInput" onkeypress="if(event.key==='Enter')submitVoiceText()" placeholder="Or type your crop symptoms here..." style="flex:1; padding:10px 14px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text-primary); font-size:0.95rem;">
-          <button onclick="submitVoiceText()" style="padding:10px 18px; background:var(--farmer-primary); color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer;"><i class="fas fa-paper-plane"></i> Send</button>
+          <input type="text" id="voiceTextInput" placeholder="Or type your crop symptoms here..." style="flex:1; padding:10px 14px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text-primary); font-size:0.95rem;">
+          <button id="voiceSendButton" style="padding:10px 18px; background:var(--farmer-primary); color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer;"><i class="fas fa-paper-plane"></i> Send</button>
         </div>
 
         <div id="voiceLoader" class="hidden" style="margin-top:16px; display:flex; align-items:center; justify-content:center; gap:8px; color:var(--farmer-primary);">
@@ -272,8 +272,9 @@
   <!-- Route Protection Script (must load first) -->
   <script src="{{ url_for('static', filename='js/route-protection.js') }}"></script>
   
-  <!-- Voice Diagnosis Script -->
+  <!-- Voice Diagnosis Scripts -->
   <script src="{{ url_for('static', filename='js/voice-diagnosis.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/voice-fix.js') }}"></script>
   
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   <script src="{{ url_for('static', filename='js/farmer.js') }}"></script>
