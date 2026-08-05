@@ -280,38 +280,8 @@
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   <script src="{{ url_for('static', filename='js/farmer.js') }}"></script>
 
-  <!-- Minimal inline script for global function stubs and initialization -->
   <script>
-    // Expose global functions needed by HTML onclick handlers
-    window.startVoiceAssistant = startVoiceAssistant;
-    window.startCameraScan = startCameraScan;
-    window.capturePhoto = capturePhoto;
-    window.handleLogout = handleLogout;
-    window.toggleTheme = toggleTheme;
-    window.toggleFarmerMode = toggleFarmerMode;
-    window.callKVK = callKVK;
-    window.callAgricultureDept = callAgricultureDept;
-    window.callExpertHelpline = callExpertHelpline;
-    window.closeCameraModal = closeCameraModal;
-    window.initCamera = initCamera;
-    window.uploadImage = uploadImage;
-    
-    // Stub implementations - will be overridden by voice-fix.js
-    function startVoiceAssistant() { console.log('startVoiceAssistant from voice-fix.js'); }
-    function startCameraScan() { console.log('startCameraScan from app.js'); }
-    function capturePhoto() { console.log('capturePhoto from app.js'); }
-    function handleLogout() { fetch('/logout', { method: 'POST' }).then(r => { if (r.ok) location.href = '/login'; }); }
-    function toggleTheme() { const h = document.documentElement; const t = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; h.setAttribute('data-theme', t); localStorage.setItem('theme', t); }
-    function toggleFarmerMode() { const h = document.documentElement; const m = h.getAttribute('data-mode') === 'farmer' ? 'normal' : 'farmer'; h.setAttribute('data-mode', m); localStorage.setItem('farmerMode', m); }
-    function callKVK() { alert('📞 KVK Helpline: 1234-567890'); }
-    function callAgricultureDept() { alert('📞 Agriculture Department: 1800-180-1551'); }
-    function callExpertHelpline() { alert('📞 Expert Helpline: 1800-270-0000'); }
-    function closeCameraModal() { const m = document.getElementById('cameraModal'); if (m) m.classList.add('hidden'); }
-    function initCamera() { console.log('initCamera called'); }
-    function uploadImage(f, n) { console.log('uploadImage called'); }
-    
-    console.log('✅ Global function stubs ready. Loading full implementations from modules...');
+    console.log('🌱 Page initialized successfully');
   </script>
-
 </body>
 </html>

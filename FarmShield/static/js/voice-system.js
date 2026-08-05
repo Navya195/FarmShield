@@ -600,3 +600,8 @@ style.textContent = `
   }
 `;
 document.head.appendChild(style);
+
+window.startVoiceAssistant = startVoiceAssistant;
+window.closeVoiceModal = closeVoiceModal;
+window.handleMicClick = handleMicClick;
+window.submitVoiceText = submitVoiceText;

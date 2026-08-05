@@ -363,22 +363,6 @@ function startCameraScan() {
   openCameraModal();
 }
 
-function startVoiceAssistant() {
-  const voiceModal = document.getElementById('voiceModal');
-  if (voiceModal) {
-    voiceModal.classList.remove('hidden');
-    if (!window.voiceDiagnosis) {
-      window.voiceDiagnosis = new VoiceDiagnosis();
-    }
-    if (window.voiceDiagnosis) {
-      window.voiceDiagnosis.setLanguage('en');
-      const langSelect = document.getElementById('voiceLanguageSelect');
-      if (langSelect) {
-        langSelect.value = 'en';
-      }
-    }
-  }
-}
 
 function calculateYieldLoss() {
   const currentLossText = document.getElementById('predictedLoss').textContent;
@@ -622,7 +606,24 @@ window.playVoiceMessage = playVoiceMessage;
 window.downloadVoiceMessage = downloadVoiceMessage;
 window.shareVoiceMessage = shareVoiceMessage;
 window.startCameraScan = startCameraScan;
-window.startVoiceAssistant = startVoiceAssistant;
 window.calculateYieldLoss = calculateYieldLoss;
 window.loadDailyTasks = loadDailyTasks;
 window.loadOutbreakMap = loadOutbreakMap;
+
+window.handleLogout = function() {
+  if (confirm('Are you sure you want to logout?')) {
+    fetch('/logout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        window.location.href = '/login';
+      }
+    })
+    .catch(() => {
+      window.location.href = '/login';
+    });
+  }
+};
