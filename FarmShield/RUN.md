@@ -1,81 +1,161 @@
 # FarmShield - Run Instructions
 
-## Quick Start
+## 🚀 Quick Start
 
-### Option 1: Windows CMD
+### Step 1: Install Dependencies
 ```cmd
-cd FarmShield
-python app.py
+pip install -r requirements.txt
 ```
 
-### Option 2: Windows PowerShell
+### Step 2: Run the Application
+
+**Windows (CMD):**
+```cmd
+python run.py
+```
+
+**Windows (PowerShell):**
 ```powershell
-cd FarmShield
-python app.py
+python run.py
 ```
 
-### Option 3: Linux/Mac Terminal
+**Linux/Mac:**
 ```bash
-cd FarmShield
-python app.py
+python run.py
 ```
 
-## Access the Application
+### Step 3: Open in Browser
 
-After running the app, open your browser and go to:
-
+The app will start and display:
 ```
-http://localhost:5000
+======================================================================
+  🌱 FarmShield – Intelligent Agricultural Assistant
+  🔐 Complete Authentication System Active
+======================================================================
+
+  ✅ Starting Flask Application...
+  📍 Access at: http://localhost:5000
+  📍 Or:        http://127.0.0.1:5000
 ```
 
-or
+**Copy and paste one of these links in your browser:**
+- http://localhost:5000
+- http://127.0.0.1:5000
 
-```
-http://localhost:5000/home
-```
+## 🔐 Default Test Login
 
-## Default Test Credentials
+Use these credentials to login:
 
-- **Email**: test@farmshield.com
-- **Password**: password123
+| Field | Value |
+|-------|-------|
+| Email | test@farmshield.com |
+| Password | password123 |
 
-or
+Alternative account:
+| Field | Value |
+|-------|-------|
+| Email | farmer@example.com |
+| Password | demo123 |
 
-- **Email**: farmer@example.com
-- **Password**: demo123
+## ✨ Features
 
-## Features
-
-✅ Voice Diagnosis System (All buttons working)  
+✅ Voice Diagnosis System (All 5 buttons working)  
 ✅ Camera disease detection  
 ✅ Multi-language support (10 languages)  
 ✅ AI-powered crop analysis  
 ✅ User authentication  
 ✅ Farmer mode  
+✅ Dark/Light theme  
 
-## Troubleshooting
+## ❌ Troubleshooting
 
-**Port Already in Use?**
+### Issue: "ModuleNotFoundError" or "pip install failed"
+**Solution:**
+```cmd
+pip install flask flask-cors python-dotenv numpy pillow werkzeug
+```
+
+### Issue: "Address already in use" (Port 5000)
+**Windows:**
 ```cmd
 netstat -ano | findstr :5000
+taskkill /PID <PID> /F
 ```
 
-**Python Not Found?**
-- Install Python from https://www.python.org
-- Add Python to PATH
+**Linux/Mac:**
+```bash
+lsof -i :5000
+kill -9 <PID>
+```
 
-**Module Not Found?**
+Or use a different port:
 ```cmd
-pip install -r requirements.txt
+set PORT=5001
+python run.py
 ```
 
-## Requirements
+### Issue: "Python not found"
+- Download from https://www.python.org
+- During installation, **CHECK** "Add Python to PATH"
+- Restart your terminal after installing
 
-- Python 3.8+
-- Flask
-- NumPy
-- Modern browser (Chrome, Edge, Safari)
+### Issue: "404 Not Found" when accessing http://localhost:5000
+**Solution:** 
+1. Check that the Flask app is running (you should see the startup message)
+2. Try accessing http://localhost:5000/login directly
+3. If still not working, check browser console (F12) for errors
+
+### Issue: "Connection refused"
+**Solution:**
+1. Make sure the Flask app is running
+2. Check if port 5000 is being used by another app
+3. Try http://127.0.0.1:5000 instead of localhost:5000
+
+### Issue: "Page keeps redirecting to login"
+**Solution:**
+1. Clear browser cookies/cache
+2. Try a different browser
+3. Use Incognito/Private mode
+
+## 📋 Requirements
+
+- Python 3.8 or higher
+- Flask and dependencies (installed via pip)
+- Modern web browser:
+  - ✅ Google Chrome (recommended)
+  - ✅ Microsoft Edge
+  - ✅ Safari 14+
+  - ⚠️ Firefox (limited voice support)
+
+## 🎯 Using the Application
+
+### Voice Diagnosis (All Buttons Working!)
+1. Click the 🎤 microphone button on dashboard
+2. Select your language from dropdown 🌍
+3. Either:
+   - **Speak**: Click microphone button, say your crop problem
+   - **Type**: Type symptoms and click Send or press Enter
+4. View AI diagnosis results
+
+### Camera Detection
+1. Click the 📷 camera button
+2. Allow camera permission when prompted
+3. Capture or upload an image
+4. Get instant disease diagnosis
+
+### Profile Settings
+- Edit your information
+- Change password
+- Download reports
+- View history
+
+## 🔗 Links
+
+- **GitHub**: https://github.com/Navya195/FarmShield
+- **Python**: https://www.python.org
+- **Flask Docs**: https://flask.palletsprojects.com
 
 ---
 
-**GitHub**: https://github.com/Navya195/FarmShield
+**Last Updated**: August 5, 2026  
+**Version**: 2.0 (Button Fixes Applied)
