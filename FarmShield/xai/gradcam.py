@@ -30,7 +30,6 @@ class GradCAM:
                     pred_index = tf.argmax(preds[0])
                 class_channel = preds[:, pred_index]
             
-            # Gradient of the output neuron with regard to the output feature map
             grads = tape.gradient(class_channel, last_conv_layer_output)
             
             pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
@@ -44,7 +43,6 @@ class GradCAM:
             
         except Exception as e:
             print(f"Grad-CAM error: {e}")
-            # Return dummy heatmap
             return np.random.rand(7, 7)
     
     def create_superimposed_visualization(self, img_path, heatmap, alpha=0.4):

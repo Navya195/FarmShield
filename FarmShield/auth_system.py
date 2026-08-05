@@ -427,9 +427,7 @@ class AuthenticationSystem:
             print("🔵 Google OAuth: Showing consent screen at /auth/google")
             print(f"   Session before OAuth: {session.get('user', 'No user session')}")
             
-            # google_oauth_url = f"https://accounts.google.com/oauth2/auth?client_id={client_id}&redirect_uri={redirect_uri}&scope=email+profile&response_type=code&state={oauth_state}"
-            # return redirect(google_oauth_url)
-            
+
             return render_template('auth/oauth_redirect.html', provider='Google', state=oauth_state)
         
         @app.route('/auth/google/callback')
@@ -493,9 +491,7 @@ class AuthenticationSystem:
             print("🔵 Microsoft OAuth: Showing consent screen at /auth/microsoft")
             print(f"   Session before OAuth: {session.get('user', 'No user session')}")
             
-            # microsoft_oauth_url = f"https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id={client_id}&redirect_uri={redirect_uri}&scope=User.Read&response_type=code&state={oauth_state}"
-            # return redirect(microsoft_oauth_url)
-            
+
             return render_template('auth/oauth_redirect.html', provider='Microsoft', state=oauth_state)
         
         @app.route('/auth/microsoft/callback')
@@ -619,7 +615,7 @@ class AuthenticationSystem:
                         'success': True,
                         'reset_token': reset_token,
                         'email_configured': False,
-                        'development_otp': otp,  # Only for testing when email not configured
+                        'development_otp': otp,
                         'message': 'Email not configured - showing OTP for testing only'
                     }
                     
@@ -875,9 +871,6 @@ def require_auth(f):
             session.clear()
             return redirect(url_for('login'))
         
-        #             return redirect(url_for('login'))
-        #         logger.warning("🔒 Invalid auth timestamp - clearing session")
-        #         return redirect(url_for('login'))
-        
+
         return f(*args, **kwargs)
     return decorated_function

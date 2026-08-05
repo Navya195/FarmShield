@@ -426,7 +426,7 @@ class VoiceDiagnosisEngine:
             if keyword in text_lower:
                 return "mild"
         
-        return "moderate"  # Default
+        return "moderate"
     
     def _predict_disease(self, crop: str, symptoms: List[str]) -> List[Dict]:
         """Predict diseases based on crop and symptoms with improved accuracy"""
@@ -489,7 +489,6 @@ class VoiceDiagnosisEngine:
         
         predictions.sort(key=lambda x: x["confidence"], reverse=True)
         
-        # If no predictions found but we have symptoms, return top diseases
         if not predictions and symptoms:
             logger.info("⚠️ No crop-matched predictions. Returning general top diseases based on symptoms.")
             for disease_key, disease_info in self.diseases_db.items():
@@ -505,7 +504,6 @@ class VoiceDiagnosisEngine:
                     })
             predictions.sort(key=lambda x: x["confidence"], reverse=True)
         
-        # If still nothing, return most common disease as fallback
         if not predictions:
             logger.info("⚠️ No predictions at all. Returning fallback Early Blight response.")
             predictions.append({

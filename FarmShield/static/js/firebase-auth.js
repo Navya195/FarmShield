@@ -92,7 +92,6 @@ async function signInWithGoogle() {
         
         const data = await response.json();
         
-        // Success! Redirect to home
         showSuccessMessage('Google authentication successful!');
         setTimeout(() => {
             window.location.href = '/';

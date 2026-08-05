@@ -151,7 +151,7 @@
                 redirectToLogin('session_timeout');
             }
         }
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 5 * 60 * 1000);
     
     window.addEventListener('pageshow', function(event) {
         if (event.persisted) {

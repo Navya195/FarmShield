@@ -9,10 +9,10 @@ import sys
 from app import app
 
 if __name__ == "__main__":
-    # Get port from environment or use default
+
     port = int(os.environ.get('PORT', 5000))
     
-    # Print startup information
+
     print("\n" + "="*70)
     print("  🌱 FarmShield – Intelligent Agricultural Assistant")
     print("  🔐 Complete Authentication System Active")
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     print("="*70 + "\n")
     
     try:
-        # Run the Flask app
+
         app.run(
             host='0.0.0.0',
             port=port,

@@ -302,7 +302,7 @@ def create_lightweight_model():
         weights='imagenet',
         include_top=False,
         input_shape=(*IMG_SIZE, 3),
-        alpha=0.5  # Smaller model
+        alpha=0.5
     )
     
     base_model.trainable = False

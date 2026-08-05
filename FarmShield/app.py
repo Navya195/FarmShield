@@ -86,7 +86,7 @@ def save_users(users):
 def init_default_users():
     """Initialize default test users if users.json doesn't exist"""
     users = load_users()
-    if not users:  # If no users exist, create default ones
+    if not users:
         default_users = {
             "test@farmshield.com": {
                 "name": "Test Farmer",
@@ -517,7 +517,7 @@ def api_login():
     password = data.get("password", "")
     remember = data.get("remember", False)
     
-    print(f"Login attempt: {email}")  # Debug log
+    print(f"Login attempt: {email}")
     
     if not email or not password:
         return jsonify({"error": "Email and password required"}), 400
@@ -531,19 +531,19 @@ def api_login():
         conn.close()
         
         if not user:
-            print(f"User not found: {email}")  # Debug log
+            print(f"User not found: {email}")
             return jsonify({"error": "Invalid email or password"}), 401
         
-        print(f"User found: {user['email']}")  # Debug log
+        print(f"User found: {user['email']}")
         
         if user['account_locked']:
             return jsonify({"error": "Account is locked. Please contact support."}), 401
         
         if not bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
-            print(f"Password verification failed for: {email}")  # Debug log
+            print(f"Password verification failed for: {email}")
             return jsonify({"error": "Invalid email or password"}), 401
         
-        print(f"Login successful for: {email}")  # Debug log
+        print(f"Login successful for: {email}")
         
         session["user"] = {
             "id": user['id'],
@@ -559,7 +559,7 @@ def api_login():
         })
         
     except Exception as e:
-        print(f"Login error: {e}")  # Debug log
+        print(f"Login error: {e}")
         return jsonify({"error": "Authentication system error"}), 500
 
 
@@ -669,15 +669,15 @@ def analyze_image_for_disease(filepath: str) -> Tuple[str, float]:
             
             logger.info(f"Color analysis - Green: {green_ratio:.2%}, Yellow: {yellow_ratio:.2%}, Brown: {brown_ratio:.2%}, White: {white_ratio:.2%}")
             
-            if white_ratio > 0.15:  # White spots/powder
+            if white_ratio > 0.15:
                 return "Tomato___Late_blight", min(95, 70 + white_ratio * 100)
-            elif brown_ratio > 0.2:  # Brown discoloration
+            elif brown_ratio > 0.2:
                 return "Potato___Late_blight", min(95, 75 + brown_ratio * 50)
-            elif yellow_ratio > 0.25:  # Yellow discoloration
+            elif yellow_ratio > 0.25:
                 return "Tomato___Early_blight", min(95, 80 + yellow_ratio * 50)
-            elif green_ratio > 0.6:  # Mostly green (healthy)
+            elif green_ratio > 0.6:
                 return "Tomato___healthy", 95
-            else:  # Mixed colors or unclear
+            else:
                 return "Tomato___Early_blight", 65
         except ImportError:
             logger.warning("OpenCV not available, using basic analysis")
@@ -685,16 +685,15 @@ def analyze_image_for_disease(filepath: str) -> Tuple[str, float]:
         
         avg_brightness = np.mean(img_array)
         
-        if avg_brightness > 180:  # Very bright (possibly white fungus)
+        if avg_brightness > 180:
             return "Tomato___Late_blight", 85
-        elif avg_brightness < 100:  # Very dark (possibly advanced disease)
+        elif avg_brightness < 100:
             return "Potato___Late_blight", 80
-        else:  # Normal brightness
+        else:
             return "Tomato___Early_blight", 75
             
     except Exception as e:
         logger.error(f"Image analysis error: {e}")
-        # Return default prediction with lower confidence
         return "Tomato___Early_blight", 60
 
 @app.route("/api/chat", methods=["POST"])
@@ -904,7 +903,7 @@ def init_default_users():
             cursor.execute('SELECT COUNT(*) FROM users')
             count = cursor.fetchone()[0]
             
-            if count == 0:  # No users exist, create default ones
+            if count == 0:
                 default_users = [
                     {
                         'email': 'test@farmshield.com',
