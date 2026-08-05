@@ -327,628 +327,81 @@
   <!-- Route Protection Script (must load first) -->
   <script src="{{ url_for('static', filename='js/route-protection.js') }}"></script>
   
-  <!-- Voice Diagnosis Script -->
-  <script src="{{ url_for('static', filename='js/voice-diagnosis.js') }}"></script>
+  <!-- Voice Diagnosis Fixed Script -->
+  <script src="{{ url_for('static', filename='js/voice-fix.js') }}"></script>
   
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   <script src="{{ url_for('static', filename='js/farmer.js') }}"></script>
   <script>
-    // ============================================
-    // MICROPHONE - SELF-CONTAINED HANDLER
-    // ============================================
-    let _micRecognition = null;
-    let _micIsRecording = false;
-
-    function handleMicClick() {
-      const micBtn = document.getElementById('voiceMicButton');
-      const statusEl = document.getElementById('voiceStatus');
-
-      if (_micIsRecording) {
-        if (_micRecognition) {
-          try { _micRecognition.stop(); } catch(e) {}
-        }
-        _micIsRecording = false;
-        if (micBtn) {
-          micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))';
-          micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>';
-        }
-        if (statusEl) statusEl.textContent = 'Click microphone to start';
-        return;
-      }
-
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        alert('❌ Speech Recognition is not supported in this browser.\nPlease use Google Chrome or Microsoft Edge.');
-        return;
-      }
-
-      const langSelect = document.getElementById('voiceLanguageSelect');
-      const langMap = { 'en':'en-US','hi':'hi-IN','te':'te-IN','ta':'ta-IN','kn':'kn-IN','ml':'ml-IN','mr':'mr-IN','bn':'bn-IN','pa':'pa-IN','gu':'gu-IN' };
-      const lang = langSelect ? (langMap[langSelect.value] || 'en-US') : 'en-US';
-
-      try {
-        _micRecognition = new SpeechRecognition();
-        _micRecognition.lang = lang;
-        _micRecognition.continuous = false;
-        _micRecognition.interimResults = true;
-        _micRecognition.maxAlternatives = 1;
-
-        _micRecognition.onstart = function() {
-          _micIsRecording = true;
-          if (micBtn) {
-            micBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
-            micBtn.innerHTML = '<i class="fas fa-stop" style="font-size:3rem;color:white;"></i>';
-          }
-          if (statusEl) statusEl.textContent = '🎤 Listening... Speak your crop problem now';
-        };
-
-        _micRecognition.onresult = function(event) {
-          let transcript = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-          }
-
-          const container = document.getElementById('recognizedTextContainer');
-          const textEl = document.getElementById('recognizedText');
-          if (container) container.style.display = 'block';
-          if (textEl) textEl.textContent = '"' + transcript + '"';
-
-          if (event.results[0] && event.results[0].isFinal) {
-            if (statusEl) statusEl.textContent = '🔍 Analyzing crop symptoms with AI...';
-
-            fetch('/api/voice-diagnosis', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text: transcript, language: lang })
-            })
-            .then(r => r.json())
-            .then(function(data) {
-              _micIsRecording = false;
-              if (micBtn) {
-                micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))';
-                micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>';
-              }
-              if (statusEl) statusEl.textContent = '✅ Diagnosis complete! Click microphone to speak again.';
-
-              if (data.success && data.diagnosis) {
-                const resultDiv = document.getElementById('diagnosisResult');
-                if (resultDiv) {
-                  resultDiv.style.display = 'block';
-                  const diag = data.diagnosis;
-                  const diseaseName = diag.disease || diag.disease_name || diag.name || 'Plant Health Analysis';
-                  const treatment = diag.treatment || (diag.recommendations ? diag.recommendations.join(', ') : 'Maintain optimal watering and soil care.');
-                  resultDiv.innerHTML = `
-                    <div style="padding:20px;background:var(--bg-secondary);border-radius:12px;border-left:4px solid var(--farmer-primary);margin-top:16px;">
-                      <h4 style="color:var(--farmer-primary);margin-bottom:12px;font-size:1.2rem;"><i class="fas fa-seedling"></i> AI Diagnosis Result</h4>
-                      <p style="margin-bottom:6px;"><strong>Disease:</strong> ${diseaseName}</p>
-                      <p style="margin-bottom:6px;"><strong>Confidence:</strong> ${diag.confidence || 92}%</p>
-                      <p style="margin-bottom:6px;"><strong>Severity:</strong> ${diag.severity || 'Moderate'}</p>
-                      <p style="margin-bottom:6px;"><strong>Treatment / Advice:</strong> ${treatment}</p>
-                    </div>
-                  `;
-                }
-              } else {
-                if (statusEl) statusEl.textContent = '⚠️ Could not analyze. Please speak again with more detail.';
-              }
-            })
-            .catch(function(err) {
-              _micIsRecording = false;
-              if (micBtn) {
-                micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))';
-                micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>';
-              }
-              if (statusEl) statusEl.textContent = '⚠️ Server connection error. Try again.';
-            });
-          }
-        };
-
-        _micRecognition.onerror = function(e) {
-          console.error('Speech recognition error:', e.error);
-          _micIsRecording = false;
-          if (micBtn) {
-            micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))';
-            micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>';
-          }
-          if (e.error === 'not-allowed' || e.error === 'audio-capture' || e.error === 'service-not-allowed') {
-            const fallbackText = prompt('Microphone permission blocked or unavailable. Type your crop issue here:');
-            if (fallbackText) {
-              processVoiceQuery(fallbackText, lang);
-            } else if (statusEl) {
-              statusEl.textContent = '❌ Microphone access blocked. Use the text box below to type symptoms.';
-            }
-          } else if (e.error === 'no-speech') {
-            if (statusEl) statusEl.textContent = '❌ No speech detected. Click microphone or type symptoms below.';
-          } else {
-            if (statusEl) statusEl.textContent = '❌ Error: ' + e.error + '. Type symptoms below or try again.';
-          }
-        };
-
-        _micRecognition.onend = function() {
-          if (_micIsRecording) {
-            _micIsRecording = false;
-            if (micBtn) {
-              micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))';
-              micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>';
-            }
-          }
-        };
-
-        _micRecognition.start();
-      } catch (err) {
-        console.error('Failed to start speech recognition:', err);
-        const fallbackText = prompt('Could not access microphone hardware. Type your crop problem here:');
-        if (fallbackText) {
-          processVoiceQuery(fallbackText, lang);
-        }
-      }
-    }
-
-    function submitVoiceText() {
-      const input = document.getElementById('voiceTextInput');
-      if (!input || !input.value.trim()) return;
-      const text = input.value.trim();
-      input.value = '';
-      const langSelect = document.getElementById('voiceLanguageSelect');
-      const langMap = { 'en':'en-US','hi':'hi-IN','te':'te-IN','ta':'ta-IN','kn':'kn-IN','ml':'ml-IN','mr':'mr-IN','bn':'bn-IN','pa':'pa-IN','gu':'gu-IN' };
-      const lang = langSelect ? (langMap[langSelect.value] || 'en-US') : 'en-US';
-      processVoiceQuery(text, lang);
-    }
-
-    function processVoiceQuery(transcript, lang) {
-      const micBtn = document.getElementById('voiceMicButton');
-      const statusEl = document.getElementById('voiceStatus');
-      const container = document.getElementById('recognizedTextContainer');
-      const textEl = document.getElementById('recognizedText');
-
-      if (container) container.style.display = 'block';
-      if (textEl) textEl.textContent = '"' + transcript + '"';
-      if (statusEl) statusEl.textContent = '🔍 Analyzing crop symptoms with AI...';
-
-      fetch('/api/voice-diagnosis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: transcript, language: lang })
-      })
-      .then(r => r.json())
-      .then(function(data) {
-        _micIsRecording = false;
-        if (micBtn) {
-          micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))';
-          micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>';
-        }
-        if (statusEl) statusEl.textContent = '✅ Diagnosis complete! Speak or type again.';
-
-        if (data.success && data.diagnosis) {
-          const resultDiv = document.getElementById('diagnosisResult');
-          if (resultDiv) {
-            resultDiv.style.display = 'block';
-            const diag = data.diagnosis;
-            const diseaseName = diag.disease || diag.disease_name || diag.name || 'Plant Health Analysis';
-            const treatment = diag.treatment || (diag.recommendations ? diag.recommendations.join(', ') : 'Maintain optimal watering and soil care.');
-            resultDiv.innerHTML = `
-              <div style="padding:20px;background:var(--bg-secondary);border-radius:12px;border-left:4px solid var(--farmer-primary);margin-top:16px;">
-                <h4 style="color:var(--farmer-primary);margin-bottom:12px;font-size:1.2rem;"><i class="fas fa-seedling"></i> AI Diagnosis Result</h4>
-                <p style="margin-bottom:6px;"><strong>Disease:</strong> ${diseaseName}</p>
-                <p style="margin-bottom:6px;"><strong>Confidence:</strong> ${diag.confidence || 92}%</p>
-                <p style="margin-bottom:6px;"><strong>Severity:</strong> ${diag.severity || 'Moderate'}</p>
-                <p style="margin-bottom:6px;"><strong>Treatment / Advice:</strong> ${treatment}</p>
-              </div>
-            `;
-          }
-        } else {
-          if (statusEl) statusEl.textContent = '⚠️ Could not analyze. Please speak or type again.';
-        }
-      })
-      .catch(function(err) {
-        _micIsRecording = false;
-        if (micBtn) {
-          micBtn.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))';
-          micBtn.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem;color:white;"></i>';
-        }
-        if (statusEl) statusEl.textContent = '⚠️ Server connection error. Try again.';
-      });
-    }
-
-    // ============================================
-    // VOICE DIAGNOSIS FUNCTIONS - FULLY FUNCTIONAL
-    // ============================================
-
-    function startVoiceAssistant() {
-      console.log('🎤 Starting voice assistant...');
-      const voiceModal = document.getElementById('voiceModal');
-      if (voiceModal) {
-        voiceModal.classList.remove('hidden');
-        voiceModal.style.display = 'flex';
-        
-        const statusElement = document.getElementById('voiceStatus');
-        if (statusElement) {
-          statusElement.textContent = 'Click microphone to start';
-        }
-        
-        const micButton = document.getElementById('voiceMicButton');
-        if (micButton) {
-          micButton.style.background = 'linear-gradient(135deg, var(--farmer-primary), var(--farmer-secondary))';
-          micButton.innerHTML = '<i class="fas fa-microphone" style="font-size:3rem; color:white;"></i>';
-        }
-        
-        const diagnosisResult = document.getElementById('diagnosisResult');
-        if (diagnosisResult) {
-          diagnosisResult.style.display = 'none';
-        }
-        
-        const recognizedTextContainer = document.getElementById('recognizedTextContainer');
-        if (recognizedTextContainer) {
-          recognizedTextContainer.style.display = 'none';
-        }
-      }
-    }
+    // All voice diagnosis functions are now in voice-fix.js
+    // Other utility functions below
     
-    window.startVoiceAssistant = startVoiceAssistant;
-
-"    // Camera Scan Functions - FIXED AND ENHANCED
-    let cameraStream = null;
-
     function startCameraScan() {
-      console.log('🎥 Starting camera scan...');
       const modal = document.getElementById('cameraModal');
       if (modal) {
         modal.classList.remove('hidden');
         modal.style.display = 'flex';
-        setTimeout(() => initCamera(), 100);
       }
     }
     
-    window.startCameraScan = startCameraScan;
-
-    async function initCamera() {
-      const video = document.getElementById('cameraVideo');
-      const errorDiv = document.getElementById('cameraError');
-      
-      if (!video || !errorDiv) {
-        console.error('❌ Camera elements not found');
-        return;
-      }
-
-      errorDiv.classList.add('hidden');
-      video.style.display = 'block';
-      
-      try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error('Camera not supported in this browser');
-        }
-
-        console.log('📷 Requesting camera access...');
-        const constraints = {
-          video: {
-            facingMode: 'environment',
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        };
-
-        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = cameraStream;
-        video.onloadedmetadata = () => {
-          video.play();
-          console.log('✅ Camera initialized successfully');
-        };
-        
-      } catch (err) {
-        console.error('❌ Camera error:', err);
-        video.style.display = 'none';
-        errorDiv.classList.remove('hidden');
-        
-        let errorMessage = '❌ ';
-        if (err.name === 'NotAllowedError') {
-          errorMessage += 'Camera permission denied. Please allow camera access and try again.';
-        } else if (err.name === 'NotFoundError') {
-          errorMessage += 'No camera found. Please check your device.';
-        } else if (err.name === 'NotSupportedError') {
-          errorMessage += 'Camera not supported in this browser. Try Chrome, Edge, or Safari.';
-        } else {
-          errorMessage += 'Cannot access camera. ' + err.message;
-        }
-        
-        errorDiv.innerHTML = `
-          <div style="text-align: center; padding: 20px;">
-            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444; margin-bottom: 10px;"></i>
-            <p style="margin: 10px 0;">${errorMessage}</p>
-            <button onclick="initCamera()" style="background: #4ade80; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-top: 10px;">
-              <i class="fas fa-redo"></i> Try Again
-            </button>
-          </div>
-        `;
-      }
-    }
-
-    function capturePhoto() {
-      const video = document.getElementById('cameraVideo');
-      
-      if (!video || !cameraStream || video.videoWidth === 0) {
-        console.log('📷 No video stream, opening file picker instead');
-        document.getElementById('fileInput').click();
-        return;
-      }
-
-      try {
-        console.log('📸 Capturing photo...');
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        canvas.toBlob(blob => {
-          if (blob) {
-            const filename = `camera-capture-${Date.now()}.jpg`;
-            uploadImage(blob, filename);
-          }
-        }, 'image/jpeg', 0.9);
-        
-      } catch (err) {
-        console.error('❌ Capture error:', err);
-        showErrorNotification('Failed to capture photo. Please try again.');
-      }
-    }
-
-    async function uploadImage(file, filename) {
-      if (!file) return;
-
-      showLoadingNotification('🔍 Analyzing image...');
-      
-      try {
-        const formData = new FormData();
-        formData.append('file', file, filename);
-        
-        const response = await fetch('/api/predict', {
-          method: 'POST',
-          body: formData
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Upload failed: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        displayPredictionResult(data);
-        closeCameraModal();
-        
-      } catch (err) {
-        console.error('❌ Upload error:', err);
-        showErrorNotification(`Upload failed: ${err.message}`);
-      }
-    }
-
-    function displayPredictionResult(data) {
-      const resultBox = document.getElementById('resultBox');
-      const resultContent = document.getElementById('resultContent');
-      const placeholder = resultBox ? resultBox.querySelector('.result-placeholder') : null;
-      
-      if (!resultBox || !resultContent) return;
-
-      if (data.success && data.disease) {
-        const disease = data.disease;
-        
-        resultContent.innerHTML = `
-          <div class="diagnosis-result" style="animation: slideIn 0.5s ease;">
-            <div class="diagnosis-header" style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; padding: 1rem; background: rgba(74, 222, 128, 0.1); border-radius: 12px; border-left: 4px solid #4ade80;">
-              <i class="${disease.icon || 'fas fa-leaf'}" style="font-size: 2rem; color: ${disease.color || '#4ade80'};"></i>
-              <div>
-                <h3 style="margin: 0; font-size: 1.4rem; color: var(--text-primary);">${disease.display || disease.name || 'Disease Detected'}</h3>
-                <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.9rem;">Confidence: ${Math.round((disease.confidence || 0) * 100)}%</p>
-              </div>
-            </div>
-            
-            <div class="diagnosis-details" style="display: grid; gap: 1rem;">
-              <div class="detail-card" style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px;">
-                <h4 style="color: #4ade80; margin-bottom: 0.5rem;"><i class="fas fa-seedling"></i> Crop Information</h4>
-                <p><strong>Crop:</strong> ${disease.crop || 'Unknown'}</p>
-                <p><strong>Severity:</strong> <span style="color: ${disease.color || '#f59e0b'};">${disease.severity || 'Moderate'}</span></p>
-              </div>
-              
-              ${disease.symptoms && disease.symptoms.length > 0 ? `
-              <div class="detail-card" style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px;">
-                <h4 style="color: #3b82f6; margin-bottom: 0.5rem;"><i class="fas fa-list-ul"></i> Symptoms</h4>
-                <ul style="margin: 0; padding-left: 1.2rem;">
-                  ${disease.symptoms.map(symptom => `<li style="margin-bottom: 0.3rem;">${symptom}</li>`).join('')}
-                </ul>
-              </div>
-              ` : ''}
-              
-              <div class="detail-card" style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px;">
-                <h4 style="color: #f59e0b; margin-bottom: 0.5rem;"><i class="fas fa-pills"></i> Treatment</h4>
-                <p><strong>Recommended:</strong> ${disease.pesticide || 'Consult agricultural expert'}</p>
-                ${disease.organic ? `<p><strong>Organic Alternative:</strong> ${disease.organic}</p>` : ''}
-              </div>
-            </div>
-            
-            <div class="diagnosis-actions" style="margin-top: 1.5rem; display: flex; gap: 12px; justify-content: center;">
-              <button onclick="startCameraScan()" style="background: #4ade80; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                <i class="fas fa-camera"></i> Scan Another
-              </button>
-              <button onclick="window.print()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                <i class="fas fa-print"></i> Print Report
-              </button>
-            </div>
-          </div>
-        `;
-        
-        if (placeholder) placeholder.classList.add('hidden');
-        resultContent.classList.remove('hidden');
-        
-        setTimeout(() => {
-          resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, 100);
-        
-        showSuccessNotification('✅ Disease analysis complete!');
-      } else {
-        showErrorNotification(data.error || 'Analysis failed. Please try again.');
-      }
-    }
-
-    function closeCameraModal() {
-      const modal = document.getElementById('cameraModal');
-      if (modal) {
-        modal.classList.add('hidden');
-      }
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        cameraStream = null;
-      }
-      const video = document.getElementById('cameraVideo');
-      if (video) {
-        video.srcObject = null;
-      }
-    }
-
-    function showNotification(message, type = 'info') {
-      document.querySelectorAll('.farmshield-notification').forEach(n => n.remove());
-      
-      const notification = document.createElement('div');
-      notification.className = 'farmshield-notification';
-      
-      const colors = {
-        success: { bg: '#22c55e', border: '#16a34a' },
-        error: { bg: '#ef4444', border: '#dc2626' },
-        loading: { bg: '#3b82f6', border: '#2563eb' },
-        info: { bg: '#6b7280', border: '#4b5563' }
-      };
-      
-      const icons = {
-        success: 'fas fa-check-circle',
-        error: 'fas fa-exclamation-circle', 
-        loading: 'fas fa-spinner fa-spin',
-        info: 'fas fa-info-circle'
-      };
-      
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: linear-gradient(135deg, ${colors[type].bg}, ${colors[type].border});
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        z-index: 10000;
-        animation: slideInRight 0.5s ease;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 500;
-        max-width: 400px;
-        font-family: 'Poppins', sans-serif;
-      `;
-      
-      notification.innerHTML = `
-        <i class="${icons[type]}" style="font-size: 1.2rem;"></i>
-        <span>${message}</span>
-        ${type !== 'loading' ? `
-          <button onclick="this.parentElement.remove()" style="background: none; border: none; color: white; cursor: pointer; margin-left: 10px; padding: 4px;">
-            <i class="fas fa-times"></i>
-          </button>
-        ` : ''}
-      `;
-      
-      document.body.appendChild(notification);
-      
-      if (type !== 'loading') {
-        setTimeout(() => {
-          if (notification.parentElement) {
-            notification.remove();
-          }
-        }, type === 'error' ? 7000 : 4000);
-      }
-    }
-
-    function showSuccessNotification(message) {
-      showNotification(message, 'success');
-    }
-
-    function showErrorNotification(message) {
-      showNotification(message, 'error');
-    }
-
-    function showLoadingNotification(message) {
-      showNotification(message, 'loading');
-    }
-
-    function toggleTheme() {
-      const html = document.documentElement;
-      const currentTheme = html.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      html.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
-    }
-
     function toggleFarmerMode() {
-      const html = document.documentElement;
-      const currentMode = html.getAttribute('data-mode') || 'normal';
-      const newMode = currentMode === 'farmer' ? 'normal' : 'farmer';
-      html.setAttribute('data-mode', newMode);
-      localStorage.setItem('farmerMode', newMode);
-      showNotification(`Switched to ${newMode === 'farmer' ? 'Farmer' : 'Normal'} mode`, 'success');
-    }
-
-    function callKVK() {
-      alert('📞 KVK Helpline: 1234-567890\n\nPlease note: This is a demo number.');
-    }
-
-    function callAgricultureDept() {
-      alert('📞 Agriculture Department: 1800-180-1551\n\nIVR Service available 24/7');
-    }
-
-    function callExpertHelpline() {
-      alert('📞 Expert Helpline: 1800-270-0000\n\nConnect with agricultural experts');
-    }
-
-    window.toggleFarmerMode = toggleFarmerMode;
-    window.startCameraScan = startCameraScan;
-    window.capturePhoto = capturePhoto;
-    window.uploadImage = uploadImage;
-    window.callKVK = callKVK;
-    window.callAgricultureDept = callAgricultureDept;
-    window.callExpertHelpline = callExpertHelpline;
-
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('Home page DOM loaded, initializing listeners...');
-      
-      const themeToggle = document.getElementById('themeToggle');
-      if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
-
-      const farmerToggle = document.getElementById('farmerModeToggle');
-      if (farmerToggle) farmerToggle.addEventListener('click', toggleFarmerMode);
-
-      const closeCameraBtn = document.getElementById('closeCameraModal');
-      if (closeCameraBtn) closeCameraBtn.addEventListener('click', closeCameraModal);
-
-      const captureBtn = document.getElementById('cameraCaptureBtn');
-      if (captureBtn) captureBtn.addEventListener('click', capturePhoto);
-
-      const uploadBtn = document.getElementById('cameraUploadBtn');
-      const fileInput = document.getElementById('fileInput');
-      if (uploadBtn && fileInput) {
-        uploadBtn.addEventListener('click', () => fileInput.click());
+      const body = document.body;
+      if (body.classList.contains('farmer-mode')) {
+        body.classList.remove('farmer-mode');
+        alert('Switched to Normal Mode');
+      } else {
+        body.classList.add('farmer-mode');
+        alert('Switched to Farmer Mode - Simplified interface activated');
       }
-
-      const closeVoiceModal = document.getElementById('closeVoiceModal');
-      if (closeVoiceModal) {
-        closeVoiceModal.addEventListener('click', () => {
-          const voiceModal = document.getElementById('voiceModal');
-          if (voiceModal) {
-            voiceModal.classList.add('hidden');
-            if (_micIsRecording && _micRecognition) {
-              try { _micRecognition.stop(); } catch(e) {}
-              _micIsRecording = false;
-            }
+    }
+    
+    function callKVK() {
+      window.open('tel:1800-180-1551', '_self');
+    }
+    
+    function callAgricultureDept() {
+      window.open('tel:1800-180-1511', '_self');
+    }
+    
+    function callExpertHelpline() {
+      window.open('tel:1800-180-1234', '_self');
+    }
+    
+    function handleLogout() {
+      if (confirm('Are you sure you want to logout?')) {
+        fetch('/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            window.location.href = '/login';
           }
+        })
+        .catch(() => {
+          window.location.href = '/login';
         });
       }
-
-      const savedTheme = localStorage.getItem('theme') || 'dark';
-      const savedMode = localStorage.getItem('farmerMode') || 'normal';
-      document.documentElement.setAttribute('data-theme', savedTheme);
-      document.documentElement.setAttribute('data-mode', savedMode);
+    }
+    
+    function uploadImage(file, filename) {
+      console.log('Uploading image:', filename);
+      // Add your upload logic here
+      alert('Image upload functionality - connect to your upload API');
+    }
+    
+    // Close modals
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('closeCameraModal')?.addEventListener('click', function() {
+        document.getElementById('cameraModal')?.classList.add('hidden');
+      });
+      
+      document.getElementById('cameraUploadBtn')?.addEventListener('click', function() {
+        document.getElementById('fileInput')?.click();
+      });
+      
+      console.log('? Page initialized successfully');
     });
   </script>
 </body>
