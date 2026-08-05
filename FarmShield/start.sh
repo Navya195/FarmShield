@@ -1,22 +1,46 @@
 #!/bin/bash
 
-# FarmShield Startup Script
+# FarmShield Startup Script for Linux/Mac
 
-echo "🌾 Starting FarmShield..."
+echo ""
+echo "========================================================================"
+echo "  🌱 FarmShield - Intelligent Agricultural Assistant"
+echo "========================================================================"
+echo ""
 
-# Create necessary directories
-mkdir -p uploads reports model nlp
-
-# Initialize database if it doesn't exist
-if [ ! -f farmshield.db ]; then
-    echo "📦 Initializing database..."
-    python -c "from app import init_default_users; init_default_users()"
+# Check if Python is installed
+if ! command -v python3 &> /dev/null; then
+    echo "❌ ERROR: Python 3 is not installed"
+    echo ""
+    echo "Please install Python from https://www.python.org"
+    echo ""
+    exit 1
 fi
 
-# Set environment variables for production
-export FLASK_ENV=production
-export PYTHONUNBUFFERED=1
+echo "✅ Python found: $(python3 --version)"
+echo ""
+
+# Check if Flask is installed
+python3 -c "import flask" 2>/dev/null
+if [ $? -ne 0 ]; then
+    echo "⏳ Installing required packages..."
+    pip3 install flask flask-cors python-dotenv numpy pillow werkzeug
+    if [ $? -ne 0 ]; then
+        echo "❌ Failed to install packages"
+        exit 1
+    fi
+fi
+
+echo "✅ All dependencies ready"
+echo ""
+echo "========================================================================"
+echo ""
 
 # Start the application
-echo "🚀 Starting Flask application..."
-exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 app:app
+python3 run.py
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ Application failed to start"
+    exit 1
+fi
