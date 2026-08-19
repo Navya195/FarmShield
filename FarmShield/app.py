@@ -409,7 +409,7 @@ def api_signup():
     data = request.get_json() or {}
     email = data.get("email", "").strip().lower()
     password = data.get("password", "")
-    name = data.get("name", "")
+    name = data.get("name", "").strip()
     
     if not email or not password or not name:
         return jsonify({"error": "All fields are required"}), 400
@@ -417,12 +417,11 @@ def api_signup():
     if not auth_system.security.validate_email(email):
         return jsonify({"error": "Invalid email format"}), 400
     
-    valid, message = auth_system.security.validate_password_strength(password)
-    if not valid:
-        return jsonify({"error": message}), 400
+    if len(password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters long"}), 400
     
     if auth_system.get_user_by_email(email):
-        return jsonify({"error": "User already exists"}), 409
+        return jsonify({"error": "An account with this email already exists. Please login instead."}), 409
     
     try:
         password_hash = auth_system.security.hash_password(password)
@@ -430,18 +429,32 @@ def api_signup():
         try:
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO users (email, name, password_hash, created_at)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO users (email, name, password_hash, email_verified, created_at)
+                VALUES (?, ?, ?, 1, ?)
             ''', (email, name, password_hash, datetime.datetime.now()))
             conn.commit()
             
-            return jsonify({"message": "Account created successfully"}), 201
+            # Fetch the newly created user to auto-login
+            cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
+            new_user = cursor.fetchone()
+            
+            if new_user:
+                session["user"] = {
+                    "id": new_user['id'],
+                    "email": new_user['email'],
+                    "name": new_user['name'],
+                    "profile_picture": new_user['profile_picture']
+                }
+                logger.info(f"Signup and auto-login successful for: {email}")
+            
+            return jsonify({"message": "Account created successfully", "redirect": "/home"}), 201
             
         finally:
             conn.close()
             
     except Exception as e:
-        return jsonify({"error": "Failed to create account"}), 500
+        logger.error(f"Signup error: {e}", exc_info=True)
+        return jsonify({"error": "Failed to create account. Please try again."}), 500
 
 @app.route("/api/auth/login", methods=["POST"])
 def api_login():
@@ -495,8 +508,8 @@ def api_login():
         })
         
     except Exception as e:
-        print(f"Login error: {e}")
-        return jsonify({"error": "Authentication system error"}), 500
+        logger.error(f"Login error: {e}", exc_info=True)
+        return jsonify({"error": "Authentication system error. Please try again."}), 500
 
 
 @app.route("/api/auth/session", methods=["GET"])
