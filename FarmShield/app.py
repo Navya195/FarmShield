@@ -450,7 +450,7 @@ def api_login():
     password = data.get("password", "")
     remember = data.get("remember", False)
     
-    print(f"Login attempt: {email}")
+    logger.info(f"Login attempt: {email}")
     
     if not email or not password:
         return jsonify({"error": "Email and password required"}), 400
@@ -463,10 +463,10 @@ def api_login():
         conn.close()
         
         if not user:
-            print(f"User not found: {email}")
+            logger.warning(f"User not found: {email}")
             return jsonify({"error": "Invalid email or password"}), 401
         
-        print(f"User found: {user['email']}")
+        logger.info(f"User found: {user['email']}")
         
         if user['account_locked']:
             return jsonify({"error": "Account is locked. Please contact support."}), 401
@@ -476,10 +476,10 @@ def api_login():
             return jsonify({"error": "Please login with Google or Microsoft"}), 401
         
         if not bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8')):
-            print(f"Password verification failed for: {email}")
+            logger.warning(f"Password verification failed for: {email}")
             return jsonify({"error": "Invalid email or password"}), 401
         
-        print(f"Login successful for: {email}")
+        logger.info(f"Login successful for: {email}")
         
         session["user"] = {
             "id": user['id'],
