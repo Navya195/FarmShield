@@ -54,7 +54,8 @@ class GradCAM:
             
             heatmap = np.uint8(255 * heatmap)
             
-            jet = cm.get_cmap("jet")
+            from matplotlib import colormaps
+            jet = colormaps["jet"]
             jet_colors = jet(np.arange(256))[:, :3]
             jet_heatmap = jet_colors[heatmap]
             

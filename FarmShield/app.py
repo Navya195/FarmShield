@@ -3,11 +3,9 @@ import sys
 sys.stdout.reconfigure(encoding='utf-8')
 import json
 import uuid
-import base64
 import datetime
 import logging
 import numpy as np
-import sqlite3
 import bcrypt
 from typing import Tuple
 from flask import Flask, render_template, request, jsonify, session, send_from_directory, redirect, url_for
@@ -303,13 +301,7 @@ def generate_gradcam(model, img_array, last_conv_layer_name="Conv_1"):
         return None
 
 def process_nlp_query(query):
-    if not AI_AVAILABLE:
-        return {
-            "intent": "missing_dependencies",
-            "response": "NLP module requires NLTK and scikit-learn installation.",
-            "confidence": 0.0,
-            "crop": None
-        }
+    """Process natural language queries using keyword matching"""
     try:
         query_lower = query.lower()
         crops = ["tomato", "potato", "rice", "wheat", "corn", "apple", "grape"]
@@ -400,13 +392,6 @@ def api_logout():
 def logout():
     """Unified logout endpoint - Clears all session data"""
     try:
-        session.pop("user", None)
-        session.pop("oauth_state", None)
-        session.pop("oauth_provider", None)
-        session.pop("last_prediction", None)
-        session.pop("auth_method", None)
-        session.pop("authenticated_at", None)
-        
         session.clear()
         
         logger.info("✅ User logged out successfully - All session data cleared")
@@ -417,11 +402,6 @@ def logout():
     except Exception as e:
         logger.error(f"Logout error: {e}")
         return jsonify({"error": "Logout failed"}), 500
-
-@app.route("/logout_test")
-def logout_test():
-    """Debug page for testing logout"""
-    return render_template("logout_test.html")
 
 
 @app.route("/api/auth/signup", methods=["POST"])
@@ -491,7 +471,11 @@ def api_login():
         if user['account_locked']:
             return jsonify({"error": "Account is locked. Please contact support."}), 401
         
-        if not bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+        stored_hash = user['password_hash']
+        if not stored_hash:
+            return jsonify({"error": "Please login with Google or Microsoft"}), 401
+        
+        if not bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8')):
             print(f"Password verification failed for: {email}")
             return jsonify({"error": "Invalid email or password"}), 401
         
@@ -899,7 +883,6 @@ def init_db_default_users():
 init_db_default_users()
 
 if __name__ == "__main__":
-    
     port = int(os.environ.get('PORT', 5000))
     debug_mode = os.environ.get('FLASK_ENV') != 'production'
     
