@@ -12,9 +12,21 @@ import logging
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import request, session, jsonify, redirect, url_for
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
-import msal
+try:
+    from google.oauth2 import id_token
+    from google.auth.transport import requests as google_requests
+    GOOGLE_AUTH_AVAILABLE = True
+except ImportError:
+    GOOGLE_AUTH_AVAILABLE = False
+    id_token = None
+    google_requests = None
+
+try:
+    import msal
+    MSAL_AVAILABLE = True
+except ImportError:
+    MSAL_AVAILABLE = False
+    msal = None
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
