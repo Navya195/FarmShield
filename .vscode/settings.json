@@ -1,5 +1,6 @@
 {
   "python.defaultInterpreterPath": "c:\\Users\\navya\\OneDrive\\ドキュメント\\FarmShield ai\\venv\\Scripts\\python.exe",
+  "python.pythonPath": "c:\\Users\\navya\\OneDrive\\ドキュメント\\FarmShield ai\\venv\\Scripts\\python.exe",
   "python.analysis.extraPaths": [
     "c:\\Users\\navya\\OneDrive\\ドキュメント\\FarmShield ai\\venv\\Lib\\site-packages"
   ]
