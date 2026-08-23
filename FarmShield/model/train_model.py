@@ -19,6 +19,16 @@ try:
     TF_AVAILABLE = True
 except ImportError:
     TF_AVAILABLE = False
+    tf = None
+    MobileNetV2 = None
+    Dense = None
+    GlobalAveragePooling2D = None
+    Dropout = None
+    Model = None
+    Adam = None
+    ModelCheckpoint = None
+    EarlyStopping = None
+    ReduceLROnPlateau = None
     print("[WARN] TensorFlow not available - training script will not run.")
 
 try:
@@ -26,6 +36,7 @@ try:
     IMG_GEN_AVAILABLE = True
 except (ImportError, AttributeError):
     IMG_GEN_AVAILABLE = False
+    ImageDataGenerator = None
 
 try:
     import matplotlib.pyplot as plt
@@ -39,6 +50,9 @@ try:
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
+    classification_report = None
+    confusion_matrix = None
+
 
 try:
     import seaborn as sns
