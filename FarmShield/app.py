@@ -57,7 +57,7 @@ app.config["REPORT_FOLDER"] = os.path.join(os.path.dirname(__file__), "reports")
 app.config["MODEL_PATH"] = os.path.join(os.path.dirname(__file__), "model", "farmshield_model.h5")
 app.config["NLP_DATA_PATH"] = os.path.join(os.path.dirname(__file__), "nlp", "knowledge_base.json")
 
-app.config["SESSION_COOKIE_SECURE"] = os.getenv("FLASK_ENV") == "production"
+app.config["SESSION_COOKIE_SECURE"] = os.getenv("SESSION_COOKIE_SECURE", "False").lower() == "true"
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["PERMANENT_SESSION_LIFETIME"] = 3600  # 1 hour
@@ -75,7 +75,8 @@ CORS(app, resources={
     r"/api/*": {
         "origins": ["http://localhost:5000", "http://localhost:5173", "http://127.0.0.1:5000", "http://127.0.0.1:5173"],
         "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True
     }
 })
 

@@ -33,7 +33,11 @@ logger = logging.getLogger(__name__)
 class DatabaseManager:
     """Secure database operations with connection pooling"""
     
-    def __init__(self, db_path='farmshield.db'):
+    def __init__(self, db_path=None):
+        if db_path is None:
+            # Resolve db_path relative to this file's directory
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            db_path = os.path.join(current_dir, 'farmshield.db')
         self.db_path = db_path
         self.lock = Lock()
         self.init_database()
