@@ -11,7 +11,6 @@ import logging
 import sqlite3
 import smtplib
 import hashlib
-import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
@@ -19,7 +18,7 @@ from functools import wraps
 from threading import Lock
 import bcrypt
 import json
-from flask import Flask, request, session, jsonify, redirect, url_for, render_template, flash
+from flask import request, session, jsonify, redirect, url_for, render_template
 from dotenv import load_dotenv
 
 load_dotenv()
