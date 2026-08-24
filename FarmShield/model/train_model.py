@@ -11,6 +11,7 @@ import numpy as np
 # --- Safe optional imports ---
 try:
     import tensorflow as tf
+    # pyrefly: ignore [missing-import]
     from tensorflow.keras.applications import MobileNetV2
     from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
     from tensorflow.keras.models import Model
@@ -27,11 +28,12 @@ except ImportError:
     Model = None
     Adam = None
     ModelCheckpoint = None
-    EarlyStopping = None
+    EarlyStopping = None 
     ReduceLROnPlateau = None
     print("[WARN] TensorFlow not available - training script will not run.")
 
 try:
+    # pyrefly: ignore [missing-import]
     from tensorflow.keras.preprocessing.image import ImageDataGenerator
     IMG_GEN_AVAILABLE = True
 except (ImportError, AttributeError):
@@ -62,11 +64,13 @@ except ImportError:
     sns = None
 
 # --- Constants ---
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 IMG_SIZE = (224, 224)
 BATCH_SIZE = 32
 EPOCHS = 50
 LEARNING_RATE = 0.0001
-NUM_CLASSES = 38  # PlantVillage dataset classes
+DEFAULT_NUM_CLASSES = 38  # PlantVillage dataset classes
+
 
 DISEASE_CLASSES = [
     'Apple___Apple_scab',
@@ -110,7 +114,7 @@ DISEASE_CLASSES = [
 ]
 
 
-def create_model():
+def create_model(num_classes=DEFAULT_NUM_CLASSES):
     """Create CNN model using MobileNetV2 transfer learning"""
     if not TF_AVAILABLE:
         raise RuntimeError("TensorFlow is required to create the model.")
@@ -129,7 +133,7 @@ def create_model():
     x = Dropout(0.3)(x)
     x = Dense(512, activation='relu')(x)
     x = Dropout(0.2)(x)
-    outputs = Dense(NUM_CLASSES, activation='softmax')(x)
+    outputs = Dense(num_classes, activation='softmax')(x)
 
     model = Model(inputs, outputs)
     return model
@@ -187,11 +191,19 @@ def train_model():
     print("FarmShield - Training CNN Model for Crop Disease Detection")
     print("=" * 60)
 
-    data_dir = "../datasets/PlantVillage"
+    data_dir = os.path.join(os.path.dirname(SCRIPT_DIR), "datasets", "PlantVillage")
     if not os.path.exists(data_dir):
         print("[ERROR] Dataset not found. Please download PlantVillage dataset.")
         print("   Download from: https://www.kaggle.com/datasets/abdallahalidev/plantvillage-dataset")
         return None
+
+    print("\n[INFO] Preparing data generators...")
+    train_gen, val_gen = prepare_data_generators(data_dir)
+
+    num_classes = train_gen.num_classes
+    print(f"   Training samples: {train_gen.samples}")
+    print(f"   Validation samples: {val_gen.samples}")
+    print(f"   Number of classes: {num_classes}")
 
     print("[INFO] Creating MobileNetV2 model...")
     model = create_model()
@@ -200,22 +212,15 @@ def train_model():
     model.compile(
         optimizer=Adam(learning_rate=LEARNING_RATE),
         loss='categorical_crossentropy',
-        metrics=['accuracy', tf.keras.metrics.TopKCategoricalAccuracy(k=3, name='top_3_accuracy')]
+        metrics=['accuracy', tf.keras.metrics.TopKCategoricalAccuracy(k=min(3, num_classes), name='top_3_accuracy')]
     )
 
     print("\n[INFO] Model Architecture:")
     model.summary()
 
-    print("\n[INFO] Preparing data generators...")
-    train_gen, val_gen = prepare_data_generators(data_dir)
-
-    print(f"   Training samples: {train_gen.samples}")
-    print(f"   Validation samples: {val_gen.samples}")
-    print(f"   Number of classes: {train_gen.num_classes}")
-
     callbacks = [
         ModelCheckpoint(
-            'farmshield_model_best.keras',
+            os.path.join(SCRIPT_DIR, 'farmshield_model_best.keras'),
             monitor='val_accuracy',
             save_best_only=True,
             verbose=1
@@ -263,6 +268,8 @@ def train_model():
     fine_tune_epochs = 20
     total_epochs = EPOCHS + fine_tune_epochs
 
+    initial_epoch = len(history.epoch) if history and history.epoch else EPOCHS
+
     history_fine = model.fit(
         train_gen,
         epochs=total_epochs,
@@ -272,8 +279,17 @@ def train_model():
         verbose=1
     )
 
-    model.save('farmshield_model_final.keras')
-    print("\n[OK] Model saved as 'farmshield_model_final.keras'")
+    final_model_path_keras = os.path.join(SCRIPT_DIR, 'farmshield_model_final.keras')
+    final_model_path_h5 = os.path.join(SCRIPT_DIR, 'farmshield_model.h5')
+
+    model.save(final_model_path_keras)
+    print(f"\n[OK] Model saved as '{final_model_path_keras}'")
+    
+    try:
+        model.save(final_model_path_h5)
+        print(f"[OK] Model also saved as H5 format at '{final_model_path_h5}' for Flask compatibility.")
+    except Exception as e:
+        print(f"[WARN] Could not save model in H5 format: {e}")
 
     plot_training_history(history, history_fine)
 
@@ -354,51 +370,50 @@ def evaluate_model(model, val_gen):
         plt.xticks(rotation=45, ha='right')
         plt.yticks(rotation=0)
         plt.tight_layout()
-        plt.savefig('confusion_matrix.png', dpi=300, bbox_inches='tight')
+        cm_path = os.path.join(SCRIPT_DIR, 'confusion_matrix.png')
+        plt.savefig(cm_path, dpi=300, bbox_inches='tight')
+        print(f"[OK] Saved confusion matrix plot to '{cm_path}'")
         plt.show()
 
     accuracy = np.sum(predicted_classes == true_classes) / len(true_classes)
     print(f"\n[OK] Final Accuracy: {accuracy:.4f} ({accuracy*100:.2f}%)")
 
 
-def create_lightweight_model():
+def create_lightweight_model(model=None):
     """Create a lightweight model for offline use"""
     if not TF_AVAILABLE:
         print("[WARN] TensorFlow not available - skipping lightweight model creation.")
         return None
 
-    print("\n[INFO] Creating lightweight model for offline use...")
+    if model is None:
+        # Fallback to global trained_model if defined
+        globals_dict = globals()
+        if 'trained_model' in globals_dict:
+            model = globals_dict['trained_model']
 
-    base_model = MobileNetV2(
-        weights='imagenet',
-        include_top=False,
-        input_shape=(*IMG_SIZE, 3),
-        alpha=0.5
-    )
+    if model is None:
+        print("[ERROR] No trained model provided for conversion.")
+        return None
 
-    base_model.trainable = False
+    print("\n[INFO] Converting trained model to lightweight TFLite model...")
 
-    inputs = tf.keras.Input(shape=(*IMG_SIZE, 3))
-    x = base_model(inputs, training=False)
-    x = GlobalAveragePooling2D()(x)
-    x = Dropout(0.2)(x)
-    x = Dense(256, activation='relu')(x)
-    outputs = Dense(NUM_CLASSES, activation='softmax')(x)
+    lite_model_path = os.path.join(SCRIPT_DIR, 'farmshield_model_lite.tflite')
+    try:
+        converter = tf.lite.TFLiteConverter.from_keras_model(model)
+        converter.optimizations = [tf.lite.Optimize.DEFAULT]
+        tflite_model = converter.convert()
 
-    lightweight_model = Model(inputs, outputs)
+        with open(lite_model_path, 'wb') as f:
+            f.write(tflite_model)
 
-    converter = tf.lite.TFLiteConverter.from_keras_model(lightweight_model)
-    converter.optimizations = [tf.lite.Optimize.DEFAULT]
-    tflite_model = converter.convert()
-
-    with open('farmshield_model_lite.tflite', 'wb') as f:
-        f.write(tflite_model)
-
-    print("[OK] Lightweight model saved as 'farmshield_model_lite.tflite'")
-
-    return lightweight_model
+        print(f"[OK] Lightweight model saved as '{lite_model_path}'")
+        return tflite_model
+    except Exception as e:
+        print(f"[ERROR] Failed to convert model to TFLite: {e}")
+        return None
 
 
+# pyrefly: ignore [parse-error]
 if __name__ == "__main__":
     if not TF_AVAILABLE:
         print("[ERROR] TensorFlow is required to run this script.")
@@ -417,9 +432,9 @@ if __name__ == "__main__":
     trained_model = train_model()
 
     if trained_model:
-        create_lightweight_model()
+        create_lightweight_model(trained_model)
 
         print("\n[OK] Training completed successfully!")
-        print("   - Full model: farmshield_model_final.keras")
+        print("   - Full model: farmshield_model_final.keras & farmshield_model.h5")
         print("   - Lightweight model: farmshield_model_lite.tflite")
         print("   - Training plots: training_history.png, confusion_matrix.png")

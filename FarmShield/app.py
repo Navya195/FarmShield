@@ -36,6 +36,7 @@ except ImportError as e:
 try:
     import tensorflow as tf
     from tensorflow.keras.models import load_model
+    # pyrefly: ignore [missing-import]
     from tensorflow.keras.preprocessing import image
     import cv2
     from PIL import Image, ImageEnhance
