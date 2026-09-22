@@ -1,6 +1,19 @@
-FarmShield – Page Descriptions
+🌱 FarmShield – AI-Powered Smart Farming Assistant
 
-FarmShield is an AI-powered agricultural assistance platform designed to help farmers identify crop diseases, monitor crop health, and receive intelligent recommendations. The application provides a modern, dark-themed interface with a green agricultural visual identity.
+FarmShield is an intelligent agricultural platform that uses Artificial Intelligence (AI) to help farmers detect crop diseases, monitor crop health, and make informed farming decisions. The platform provides simple tools for crop image analysis, voice-based diagnosis, and AI-powered disease detection, making modern agricultural technology more accessible to farmers.
+
+Key Features
+🌿 AI Crop Disease Detection – Identify potential crop diseases from images.
+📷 One-Tap Crop Scanning – Capture crop images directly for instant analysis.
+🖼️ Image Upload & Analysis – Upload existing crop images for diagnosis.
+🎙️ Voice Diagnosis – Describe crop-related problems using voice.
+📊 AI Dashboard – Monitor scans, disease trends, and overall crop health.
+📈 Crop Health Monitoring – Track health scores for different crops.
+💡 Intelligent Recommendations – Receive AI-based insights to support crop management.
+🔐 Secure Authentication – Protected login system for accessing the platform.
+Project Objective
+
+FarmShield aims to bridge the gap between modern AI technology and agriculture by providing farmers with an easy-to-use digital assistant for early disease detection, crop monitoring, and better agricultural decision-making.
 
 🔐 Login Page
 
@@ -67,9 +80,11 @@ Purpose
 
 The Home Page gives farmers a simple starting point where they can immediately scan, upload, or describe a crop problem without navigating through complicated menus.
 
-<img width="480" height="223" alt="image" src="https://github.com/user-attachments/assets/2710e82d-b91f-4ca6-9478-0d5b388b6f62" />
+<img width="1912" height="908" alt="image" src="https://github.com/user-attachments/assets/452bd83d-40df-4aa6-82f8-35ae250ea975" />
 
-<img width="480" height="224" alt="image" src="https://github.com/user-attachments/assets/16d51b6f-144a-4a24-b90a-586a7b62abc8" />
+
+<img width="1902" height="896" alt="image" src="https://github.com/user-attachments/assets/e6b62285-74c2-4cdb-ad2c-76d11ab4855b" />
+
 
 
 
@@ -113,7 +128,8 @@ Purpose
 
 The AI Dashboard transforms individual crop scans into a broader overview of farm health and disease trends. It provides farmers with a centralized location for monitoring their AI analysis history and understanding crop conditions.
 
-<img width="480" height="224" alt="image" src="https://github.com/user-attachments/assets/b8ff8f51-009e-4142-a324-1f576fbc5932" />
+<img width="1908" height="886" alt="image" src="https://github.com/user-attachments/assets/e574b5dd-0645-49d4-9c97-e4609c33a03d" />
+
 
 
 🌱 Overall User Flow
