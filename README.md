@@ -83,7 +83,6 @@ The Home Page gives farmers a simple starting point where they can immediately s
 <img width="1912" height="908" alt="image" src="https://github.com/user-attachments/assets/452bd83d-40df-4aa6-82f8-35ae250ea975" />
 
 
-<img width="1902" height="896" alt="image" src="https://github.com/user-attachments/assets/e6b62285-74c2-4cdb-ad2c-76d11ab4855b" />
 
 
 
@@ -104,6 +103,11 @@ Reports
 Settings
 Profile/account-related options
 Overview Statistics
+
+
+<img width="1902" height="896" alt="image" src="https://github.com/user-attachments/assets/e6b62285-74c2-4cdb-ad2c-76d11ab4855b" />
+
+
 
 The dashboard displays key agricultural metrics through summary cards, including:
 
